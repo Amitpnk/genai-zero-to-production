@@ -1,0 +1,30 @@
+[project]
+name = "genai-zero-to-production"
+version = "0.1.0"
+description = "Companion code for the GenAI Engineering: Zero to Production series"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "anthropic",
+    "openai",
+    "boto3",
+    "python-dotenv",
+]
+
+[dependency-groups]
+dev = [
+    "ruff",
+    "ipykernel",
+]
+
+# Install shared/ into the venv so every episode folder can `from shared import ...`
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["shared"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
