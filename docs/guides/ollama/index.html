@@ -1,0 +1,359 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ollama Cheat Sheet · GenAI Zero to Production</title>
+<meta name="description" content="Run LLMs on your own machine with Ollama: install, pull, run, list running models, stop models and the server, use the API, and memory guidance.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/deck.css">
+<style>
+  .guide { width: min(100% - 32px, 1080px); margin: 0 auto; padding: 56px 0 80px; }
+  .guide .eyebrow { font-size: 13px; letter-spacing: .25em; text-transform: uppercase; color: var(--orange); margin: 0 0 16px; }
+  .guide h1 { font: 700 clamp(34px, 5.5vw, 56px)/1.08 var(--head); letter-spacing: -.02em; margin: 0 0 16px; }
+  .guide .intro { font-size: 18px; line-height: 1.6; color: var(--mist); max-width: 42em; margin: 0 0 28px; }
+  .guide h2 { font: 700 26px var(--head); margin: 56px 0 8px; scroll-margin-top: 80px; }
+  .guide h2 + .sub { color: var(--mist); margin: 0 0 20px; font-size: 16px; line-height: 1.55; }
+  .guide h3 { font: 600 17px var(--body); margin: 0 0 12px; }
+
+  .toc { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+  .toc a { font-size: 14px; text-decoration: none; color: var(--mist); border: 1px solid var(--line-dark); border-radius: 999px; padding: 6px 12px; }
+  .toc a:hover { color: var(--cream); border-color: var(--mist); }
+
+  .pros { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 20px; }
+  .pros div { background: var(--ink); border: 1px solid #1A2840; border-radius: 12px; padding: 18px 20px; }
+  .pros h3 { color: var(--orange); }
+  .pros ul { margin: 0; padding-left: 18px; color: var(--mist); line-height: 1.8; font-size: 15px; }
+
+  .flow { background: var(--ink); border: 1px solid #1A2840; border-radius: 12px; padding: 20px; margin-top: 16px; }
+  .flow svg { width: 100%; height: auto; display: block; }
+  .flow .scroll { overflow-x: auto; }
+  .flow ul { margin: 14px 0 0; padding-left: 18px; color: var(--mist); line-height: 1.8; font-size: 15px; }
+  .flow b { color: var(--cream); }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 480px), 1fr)); gap: 14px; }
+  .gcard { background: var(--ink); border: 1px solid #1A2840; border-radius: 12px; padding: 18px 20px; }
+  .gcard.hot { border-color: var(--orange); }
+  .gcard h3 .tag { font: 500 11px var(--mono); color: var(--ink); background: var(--orange); border-radius: 4px; padding: 2px 6px; margin-left: 6px; vertical-align: 2px; }
+
+  .cmd { display: grid; grid-template-columns: 1fr auto; gap: 4px 10px; align-items: center; padding: 10px 0; border-top: 1px solid #16233A; }
+  .cmd:first-of-type { border-top: 0; }
+  .cmd code { font: 14px var(--mono); color: var(--cream); background: #0A111D; border-radius: 6px; padding: 6px 9px; overflow-x: auto; white-space: nowrap; }
+  .cmd p { grid-column: 1 / -1; margin: 0; font-size: 14px; color: var(--mist); line-height: 1.5; }
+  .copy { font: 12px var(--body); color: var(--mist); background: transparent; border: 1px solid var(--line-dark); border-radius: 6px; padding: 5px 9px; cursor: pointer; }
+  .copy:hover { color: var(--cream); border-color: var(--mist); }
+  .copy:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+  .copy.done { color: var(--ink); background: var(--orange); border-color: var(--orange); }
+
+  pre.out { margin: 12px 0 0; font: 13px/1.6 var(--mono); color: var(--mist); background: #0A111D; border-radius: 8px; padding: 12px 14px; overflow-x: auto; }
+  pre.code { margin: 0; font: 13.5px/1.65 var(--mono); color: var(--cream); background: #0A111D; border-radius: 8px; padding: 14px 16px; overflow-x: auto; }
+  .codewrap { position: relative; }
+  .codewrap .copy { position: absolute; top: 8px; right: 8px; background: var(--ink); }
+
+  table { width: 100%; border-collapse: collapse; font-size: 15px; }
+  th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid #16233A; vertical-align: top; line-height: 1.5; }
+  th { color: var(--mist); font-weight: 500; font-size: 13px; letter-spacing: .04em; text-transform: uppercase; }
+  td code { font: 13px var(--mono); background: #0A111D; border-radius: 4px; padding: 2px 6px; }
+  td b { color: var(--cream); }
+  .tablecard { background: var(--ink); border: 1px solid #1A2840; border-radius: 12px; padding: 8px 12px; overflow-x: auto; }
+  .tablecard table { min-width: 560px; }
+  .measured { color: var(--orange); font-weight: 600; }
+  .note { font-size: 14px; color: var(--mist); margin-top: 10px; line-height: 1.55; }
+  .callout { margin-top: 14px; border-left: 3px solid var(--orange); background: var(--ink); border-radius: 0 8px 8px 0; padding: 12px 16px; color: var(--mist); font-size: 15px; line-height: 1.55; }
+  .callout b { color: var(--cream); }
+  details { margin-top: 12px; }
+  summary { cursor: pointer; color: var(--mist); font-size: 14px; }
+  summary:hover { color: var(--cream); }
+  .guide footer { margin-top: 56px; color: #8893A6; font-size: 14px; }
+  @media (max-width: 640px) { .flow svg { min-width: 640px; } .pros { grid-template-columns: 1fr; } .guide { padding-top: 32px; } }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="../../">GenAI <span>Zero to Production</span></a>
+  <nav aria-label="Guide">
+    <a href="https://github.com/Amitpnk/genai-zero-to-production/tree/main/guides/ollama">Markdown notes</a>
+    <a href="https://github.com/Amitpnk/genai-zero-to-production">GitHub repo</a>
+  </nav>
+</header>
+
+<main class="guide">
+  <p class="eyebrow">Guide · Local models</p>
+  <h1>Ollama cheat sheet</h1>
+  <p class="intro">Run open-weight LLMs on your own laptop: free, offline and private. Used in Episode 3 (<code>next_token.py</code>) and again in Module 5.</p>
+  <nav class="toc" aria-label="On this page">
+    <a href="#what">What it is</a><a href="#install">Install</a><a href="#commands">Commands</a><a href="#stop">Stop &amp; running models</a><a href="#chat">Chat commands</a><a href="#code">From code</a><a href="#memory">Memory</a><a href="#settings">Settings</a><a href="#trouble">Troubleshooting</a>
+  </nav>
+
+  <!-- What -->
+  <h2 id="what">What is Ollama?</h2>
+  <p class="sub">It runs open-weight models (Gemma, Llama, Qwen, Mistral…) locally. No API key, no cloud bill, and your prompts never leave your machine.</p>
+  <div class="pros">
+    <div><h3>Why use it</h3><ul><li>Free and works offline</li><li>Private: data stays on your machine</li><li>Great for learning and quick experiments</li></ul></div>
+    <div><h3>Why not always</h3><ul><li>Small local models are less capable than Claude, GPT or Gemini</li><li>Big models need lots of RAM, ideally a GPU</li><li>You manage downloads and memory</li></ul></div>
+  </div>
+  <div class="flow">
+    <div class="scroll"><svg viewBox="0 0 980 230" role="img" aria-labelledby="flow-t">
+      <title id="flow-t">The ollama CLI, your Python code and other apps send HTTP requests to the Ollama server on localhost port 11434, which loads models from disk into memory and sends responses back.</title>
+      <defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#B9C2D0"/></marker></defs>
+      <g font-family="IBM Plex Sans, sans-serif" font-size="16">
+        <rect x="10" y="30" width="230" height="160" rx="12" fill="#16233A" stroke="#2A3B57"/>
+        <text x="30" y="64" fill="#7AA7F0" font-family="JetBrains Mono, monospace" font-size="13">clients</text>
+        <text x="30" y="98" fill="#F5F2EA" font-weight="600">ollama CLI</text>
+        <text x="30" y="128" fill="#F5F2EA" font-weight="600">your Python code</text>
+        <text x="30" y="158" fill="#F5F2EA" font-weight="600">any app</text>
+        <line x1="250" y1="95" x2="440" y2="95" stroke="#B9C2D0" stroke-width="2" marker-end="url(#a)"/>
+        <line x1="440" y1="130" x2="250" y2="130" stroke="#B9C2D0" stroke-width="2" marker-end="url(#a)"/>
+        <text x="345" y="82" fill="#B9C2D0" text-anchor="middle" font-size="14">HTTP · localhost:11434</text>
+        <text x="345" y="155" fill="#B9C2D0" text-anchor="middle" font-size="14">responses</text>
+        <rect x="450" y="30" width="250" height="160" rx="12" fill="#16233A" stroke="#F2994A" stroke-width="2"/>
+        <text x="470" y="64" fill="#F2994A" font-family="JetBrains Mono, monospace" font-size="13">background server</text>
+        <text x="470" y="98" fill="#F5F2EA" font-weight="600" font-size="20">Ollama</text>
+        <text x="470" y="128" fill="#B9C2D0" font-size="14">starts when you install it</text>
+        <text x="470" y="152" fill="#B9C2D0" font-size="14">unloads idle models after 5 min</text>
+        <line x1="710" y1="110" x2="760" y2="110" stroke="#B9C2D0" stroke-width="2" marker-end="url(#a)"/>
+        <rect x="770" y="30" width="200" height="70" rx="12" fill="#16233A" stroke="#2A3B57"/>
+        <text x="790" y="60" fill="#F5F2EA" font-weight="600">Memory (RAM/GPU)</text>
+        <text x="790" y="84" fill="#B9C2D0" font-size="14">while a model is loaded</text>
+        <rect x="770" y="120" width="200" height="70" rx="12" fill="#16233A" stroke="#2A3B57"/>
+        <text x="790" y="150" fill="#F5F2EA" font-weight="600">Disk</text>
+        <text x="790" y="174" fill="#B9C2D0" font-size="14">downloaded models</text>
+      </g>
+    </svg></div>
+    <ul>
+      <li>A model is <b>downloaded once</b> (disk), <b>loaded into memory</b> on first use, and <b>unloaded after 5 minutes idle</b>.</li>
+      <li>The CLI, your code and other apps all talk to the same server.</li>
+    </ul>
+  </div>
+
+  <!-- Install -->
+  <h2 id="install">1 · Install and run your first model</h2>
+  <p class="sub">Download from <a href="https://ollama.com/download">ollama.com/download</a>, or use a package manager.</p>
+  <div class="grid">
+    <div class="gcard">
+      <h3>Install</h3>
+      <div class="cmd"><code>winget install Ollama.Ollama</code><button class="copy" type="button">Copy</button><p>Windows</p></div>
+      <div class="cmd"><code>brew install ollama</code><button class="copy" type="button">Copy</button><p>macOS</p></div>
+      <div class="cmd"><code>curl -fsSL https://ollama.com/install.sh | sh</code><button class="copy" type="button">Copy</button><p>Linux</p></div>
+      <div class="cmd"><code>ollama --version</code><button class="copy" type="button">Copy</button><p>Check it worked</p></div>
+    </div>
+    <div class="gcard hot">
+      <h3>First model <span class="tag">start here</span></h3>
+      <div class="cmd"><code>ollama pull gemma3:1b</code><button class="copy" type="button">Copy</button><p>Download once, about 815 MB</p></div>
+      <div class="cmd"><code>ollama run gemma3:1b</code><button class="copy" type="button">Copy</button><p>Chat with it. Type <code>/bye</code> to exit.</p></div>
+      <div class="cmd"><code>ollama run gemma3:1b "Why is the sky blue?"</code><button class="copy" type="button">Copy</button><p>One question, one answer, then exit</p></div>
+    </div>
+  </div>
+
+  <!-- Commands -->
+  <h2 id="commands">2 · Manage and run models</h2>
+  <p class="sub">Everything you need day to day.</p>
+  <div class="grid">
+    <div class="gcard">
+      <h3>Download and manage</h3>
+      <div class="cmd"><code>ollama list</code><button class="copy" type="button">Copy</button><p>All downloaded models, with size and date</p></div>
+      <div class="cmd"><code>ollama pull gemma3:1b</code><button class="copy" type="button">Copy</button><p>Download a model, or update it</p></div>
+      <div class="cmd"><code>ollama show gemma3:1b</code><button class="copy" type="button">Copy</button><p>Details: parameters, context length, quantization</p></div>
+      <div class="cmd"><code>ollama cp gemma3:1b my-gemma</code><button class="copy" type="button">Copy</button><p>Copy under a new name</p></div>
+      <div class="cmd"><code>ollama rm gemma3:1b</code><button class="copy" type="button">Copy</button><p>Delete a model and free its disk space</p></div>
+    </div>
+    <div class="gcard">
+      <h3>Run</h3>
+      <div class="cmd"><code>ollama run gemma3:1b</code><button class="copy" type="button">Copy</button><p>Interactive chat (downloads first if needed)</p></div>
+      <div class="cmd"><code>ollama run gemma3:1b --verbose</code><button class="copy" type="button">Copy</button><p>Also show speed: tokens per second, load time</p></div>
+      <div class="cmd"><code>ollama run gemma3:1b --keepalive 30m</code><button class="copy" type="button">Copy</button><p>Keep it in memory for 30 minutes after use</p></div>
+      <div class="cmd"><code>ollama run gemma3:1b --format json "List 3 colours"</code><button class="copy" type="button">Copy</button><p>Ask for a JSON response</p></div>
+    </div>
+  </div>
+
+  <!-- Stop -->
+  <h2 id="stop">3 · See what's running, and stop it</h2>
+  <p class="sub"><code>ollama stop</code> unloads a <b>model</b>. Quitting the app stops the whole <b>server</b>.</p>
+  <div class="grid">
+    <div class="gcard hot">
+      <h3>Running models</h3>
+      <div class="cmd"><code>ollama ps</code><button class="copy" type="button">Copy</button><p>What's loaded now: memory used, CPU/GPU, time until unload</p></div>
+      <div class="cmd"><code>ollama stop gemma3:1b</code><button class="copy" type="button">Copy</button><p>Unload a model from memory immediately</p></div>
+      <pre class="out">NAME        ID            SIZE    PROCESSOR  CONTEXT  UNTIL
+gemma3:1b   8648f39daa8f  883 MB  100% CPU   4096     4 minutes from now</pre>
+      <p class="note">Measured on a laptop. An empty list means nothing is using memory.</p>
+    </div>
+    <div class="gcard">
+      <h3>The server</h3>
+      <div class="cmd"><code>curl http://localhost:11434/api/version</code><button class="copy" type="button">Copy</button><p>Is the server up? Returns <code>{"version":"…"}</code></p></div>
+      <div class="cmd"><code>ollama serve</code><button class="copy" type="button">Copy</button><p>Start the server by hand (stop with <code>Ctrl+C</code>)</p></div>
+      <div class="cmd"><code>Stop-Process -Name "ollama app", "ollama"</code><button class="copy" type="button">Copy</button><p>Windows PowerShell: stop the server</p></div>
+      <div class="cmd"><code>sudo systemctl stop ollama</code><button class="copy" type="button">Copy</button><p>Linux: stop the server (<code>start</code> to start it again)</p></div>
+    </div>
+  </div>
+  <div class="tablecard" style="margin-top:14px">
+    <table>
+      <thead><tr><th scope="col">OS</th><th scope="col">Stop the server</th><th scope="col">Start it again</th></tr></thead>
+      <tbody>
+        <tr><td><b>Windows</b></td><td>Right-click the llama icon in the system tray → <b>Quit Ollama</b></td><td>Open <b>Ollama</b> from the Start menu</td></tr>
+        <tr><td><b>macOS</b></td><td>Menu bar llama icon → <b>Quit Ollama</b></td><td>Open the Ollama app</td></tr>
+        <tr><td><b>Linux</b></td><td><code>sudo systemctl stop ollama</code></td><td><code>sudo systemctl start ollama</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Chat -->
+  <h2 id="chat">4 · Inside an interactive chat</h2>
+  <p class="sub">Type these after <code>ollama run &lt;model&gt;</code>.</p>
+  <div class="tablecard">
+    <table>
+      <thead><tr><th scope="col">Type</th><th scope="col">What it does</th></tr></thead>
+      <tbody>
+        <tr><td><code>/?</code></td><td>Show all chat commands</td></tr>
+        <tr><td><code>/bye</code></td><td>Exit the chat (or press <code>Ctrl+D</code>)</td></tr>
+        <tr><td><code>/clear</code></td><td>Forget the conversation so far</td></tr>
+        <tr><td><code>/show info</code></td><td>Details of the current model</td></tr>
+        <tr><td><code>/set system "You are a pirate."</code></td><td>Set a system prompt</td></tr>
+        <tr><td><code>/set parameter temperature 0.2</code></td><td>Change a setting for this session (temperature is Episode 5)</td></tr>
+        <tr><td><code>/set parameter num_ctx 8192</code></td><td>Bigger context window (uses more memory)</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="callout">Slash commands work <b>only inside the interactive chat</b>. If you pipe text in (<code>echo "/bye" | ollama run …</code>), the model treats it as a normal prompt.</p>
+
+  <!-- Code -->
+  <h2 id="code">5 · Use Ollama from code</h2>
+  <p class="sub">Ollama speaks its own API and the OpenAI API, so the <code>openai</code> package from Episode 2 works unchanged.</p>
+  <div class="grid">
+    <div class="gcard">
+      <h3>OpenAI-compatible (Python)</h3>
+      <div class="codewrap"><button class="copy" type="button">Copy</button><pre class="code">from openai import OpenAI
+
+client = OpenAI(base_url="http://localhost:11434/v1",
+                api_key="ollama")  # any non-empty key
+reply = client.chat.completions.create(
+    model="gemma3:1b",
+    messages=[{"role": "user",
+               "content": "Say hello in five words."}],
+)
+print(reply.choices[0].message.content)</pre></div>
+      <p class="note">Test locally for free, then switch <code>base_url</code> and <code>model</code> to a cloud provider.</p>
+    </div>
+    <div class="gcard">
+      <h3>Native API (curl)</h3>
+      <div class="codewrap"><button class="copy" type="button">Copy</button><pre class="code">curl http://localhost:11434/api/chat -d '{
+  "model": "gemma3:1b",
+  "messages": [{"role": "user",
+                "content": "Say hello in five words."}],
+  "stream": false
+}'</pre></div>
+      <details>
+        <summary>On Windows PowerShell?</summary>
+        <div class="codewrap" style="margin-top:10px"><button class="copy" type="button">Copy</button><pre class="code">$body = @{ model = "gemma3:1b"; stream = $false
+  messages = @(@{ role = "user"; content = "Say hello in five words." }) } | ConvertTo-Json -Depth 5
+Invoke-RestMethod http://localhost:11434/api/chat -Method Post -Body $body -ContentType "application/json"</pre></div>
+        <p class="note">In Windows PowerShell, <code>curl</code> is an alias for <code>Invoke-WebRequest</code>.</p>
+      </details>
+    </div>
+  </div>
+  <div class="tablecard" style="margin-top:14px">
+    <table>
+      <thead><tr><th scope="col">Endpoint</th><th scope="col">Does</th></tr></thead>
+      <tbody>
+        <tr><td><code>POST /api/chat</code></td><td>Chat with messages</td></tr>
+        <tr><td><code>POST /api/generate</code></td><td>Plain text completion; supports <code>logprobs</code> (used by Episode 3's <code>next_token.py</code>)</td></tr>
+        <tr><td><code>POST /api/embed</code></td><td>Embeddings, with an embedding model such as <code>nomic-embed-text</code></td></tr>
+        <tr><td><code>GET /api/tags</code></td><td>Downloaded models (same as <code>ollama list</code>)</td></tr>
+        <tr><td><code>GET /api/ps</code></td><td>Loaded models (same as <code>ollama ps</code>)</td></tr>
+        <tr><td><code>/v1/…</code></td><td>OpenAI-compatible endpoints</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Memory -->
+  <h2 id="memory">6 · Memory: how much do I need?</h2>
+  <p class="sub"><b>Disk</b> is used once per downloaded model. <b>RAM</b> (or GPU memory) is used only while a model is loaded.</p>
+  <div class="tablecard">
+    <table>
+      <thead><tr><th scope="col">Model size</th><th scope="col">Example</th><th scope="col">RAM while loaded</th><th scope="col">Runs well on</th></tr></thead>
+      <tbody>
+        <tr><td><b>~1B</b></td><td><code>gemma3:1b</code></td><td><span class="measured">~0.9 GB (measured)</span></td><td>Any laptop with 8 GB</td></tr>
+        <tr><td><b>~4B</b></td><td>small general models</td><td>~3–4 GB</td><td>8–16 GB laptop</td></tr>
+        <tr><td><b>~12B</b></td><td>mid-size models</td><td>~8–10 GB</td><td>16 GB+ or a GPU</td></tr>
+        <tr><td><b>~27B+</b></td><td>large models</td><td>17 GB+</td><td>32 GB+ or a big GPU</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="note">Approximate for the default 4-bit (Q4_K_M) downloads. A bigger context window needs more memory. Save memory with <code>ollama stop &lt;model&gt;</code> when you're done, and run one model at a time.</p>
+
+  <!-- Settings -->
+  <h2 id="settings">7 · Settings</h2>
+  <p class="sub">Environment variables, set <b>before starting</b> the server (Windows: System Properties → Environment Variables, then restart Ollama).</p>
+  <div class="grid" style="grid-template-columns:1fr">
+    <div class="tablecard">
+      <table>
+        <thead><tr><th scope="col">Variable</th><th scope="col">Use it to</th></tr></thead>
+        <tbody>
+          <tr><td><code>OLLAMA_KEEP_ALIVE</code></td><td>Keep models loaded longer (<code>30m</code>) or unload right away (<code>0</code>). Default <code>5m</code></td></tr>
+          <tr><td><code>OLLAMA_MODELS</code></td><td>Store models on another drive</td></tr>
+          <tr><td><code>OLLAMA_HOST</code></td><td>Change address or port. Default <code>127.0.0.1:11434</code></td></tr>
+          <tr><td><code>OLLAMA_CONTEXT_LENGTH</code></td><td>Default context window for all models</td></tr>
+          <tr><td><code>OLLAMA_MAX_LOADED_MODELS</code></td><td>Limit how many models stay loaded at once</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="tablecard">
+      <table>
+        <thead><tr><th scope="col">OS</th><th scope="col">Models are stored in</th></tr></thead>
+        <tbody>
+          <tr><td><b>Windows</b></td><td><code>%USERPROFILE%\.ollama\models</code></td></tr>
+          <tr><td><b>macOS</b></td><td><code>~/.ollama/models</code></td></tr>
+          <tr><td><b>Linux</b></td><td><code>/usr/share/ollama/.ollama/models</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Troubleshooting -->
+  <h2 id="trouble">8 · Troubleshooting and clean-up</h2>
+  <p class="sub">Most problems are a stopped server or a model that's too big.</p>
+  <div class="tablecard">
+    <table>
+      <thead><tr><th scope="col">Problem</th><th scope="col">Fix</th></tr></thead>
+      <tbody>
+        <tr><td><code>could not connect to ollama server</code> / <code>ConnectionRefusedError</code></td><td>Server isn't running: open the Ollama app, or run <code>ollama serve</code></td></tr>
+        <tr><td><code>model 'gemma3:1b' not found</code></td><td><code>ollama pull gemma3:1b</code></td></tr>
+        <tr><td>Very slow replies</td><td>Model too big for your machine: try a smaller one, close other apps</td></tr>
+        <tr><td>Laptop runs out of memory</td><td><code>ollama ps</code>, then <code>ollama stop &lt;model&gt;</code></td></tr>
+        <tr><td>Disk filling up</td><td><code>ollama list</code>, then <code>ollama rm &lt;model&gt;</code></td></tr>
+        <tr><td>Port 11434 already in use</td><td>Another Ollama is running: quit it first</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="gcard" style="margin-top:14px">
+    <h3>Clean up</h3>
+    <div class="codewrap"><button class="copy" type="button">Copy</button><pre class="code">ollama ps                  # anything loaded?
+ollama stop gemma3:1b      # unload it
+ollama list                # what's on disk?
+ollama rm gemma3:1b        # delete it (frees ~815 MB)</pre></div>
+  </div>
+
+  <footer>Amit · Generative AI &amp; Agentic AI Instructor · Checked against Ollama 0.40.5</footer>
+</main>
+
+<script>
+  // Copy buttons: copy the command or code block next to the button.
+  document.querySelectorAll(".copy").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      const src = btn.parentElement.querySelector("code, pre");
+      try {
+        await navigator.clipboard.writeText(src.textContent.trim());
+        btn.textContent = "Copied";
+        btn.classList.add("done");
+      } catch {
+        btn.textContent = "Select & copy";
+      }
+      setTimeout(() => { btn.textContent = "Copy"; btn.classList.remove("done"); }, 1500);
+    });
+  });
+</script>
+</body>
+</html>

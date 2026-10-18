@@ -195,6 +195,8 @@ uv run python ep03-how-llms-work/next_token.py    # local model with Ollama
    ollama pull gemma3:1b
    ```
 
+New to Ollama? See the [Ollama cheat sheet](../guides/ollama/) for every command: running, listing and stopping models.
+
 | Error | Fix |
 | --- | --- |
 | `KeyError: 'GEMINI_EMBEDDING_MODEL'` or `'OLLAMA_MODEL'` | Add the line to `.env` (step 1) |
