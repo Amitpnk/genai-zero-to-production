@@ -1,0 +1,389 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ep 04 · Tokens and Context Windows · GenAI Zero to Production</title>
+<meta name="description" content="Slides for GenAI Engineering Episode 4: counting tokens, context windows, truncation, chat-history cost, thinking tokens and latency.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/deck.css">
+<style>
+  .s-title { display: flex; flex-direction: column; justify-content: center; }
+  .s-title .big-num { position: absolute; right: .3em; top: .05em; font: 700 20em/1 var(--head); color: #1A2840; letter-spacing: -.04em; }
+  .s-title h1 { position: relative; font-size: 7.4em; font-weight: 500; line-height: .98; letter-spacing: -.02em; margin-bottom: .45em; }
+  .s-title .sub { position: relative; font-size: 1.75em; line-height: 1.45; color: var(--mist); max-width: 32em; }
+  .s-title .byline { display: flex; align-items: center; gap: 1em; margin-top: 2.6em; font-size: 1.15em; letter-spacing: .06em; color: var(--mist); }
+  .s-title .byline::before { content: ""; width: 3.3em; height: 2px; background: var(--orange); }
+  .s-statement { display: flex; flex-direction: column; justify-content: center; }
+  .s-statement .big { font: 700 4.4em/1.12 var(--head); letter-spacing: -.02em; max-width: 15em; margin-bottom: .55em; }
+  .s-statement .lead { font-size: 2.1em; max-width: 26em; margin-top: 0; }
+
+  .split { display: grid; grid-template-columns: 1.3fr 1fr; gap: 3em; align-items: center; }
+  .points { margin: 0; padding: 0; list-style: none; display: grid; gap: 1em; }
+  .points li { font-size: 1.45em; line-height: 1.45; padding-left: 1.3em; position: relative; color: var(--slate); }
+  .dark .points li { color: var(--mist); }
+  .points li::before { content: ""; position: absolute; left: 0; top: .55em; width: .5em; height: .5em; border-radius: 50%; background: var(--rust); }
+  .dark .points li::before { background: var(--orange); }
+  .points b { color: var(--ink); }
+  .dark .points b { color: var(--cream); }
+
+  /* Grouped bar chart (token counts) */
+  .legend { display: flex; gap: 1.6em; font-size: 1.15em; color: var(--slate); margin-bottom: 1.1em; }
+  .legend span { display: inline-flex; align-items: center; gap: .5em; }
+  .legend i { width: .9em; height: .9em; border-radius: 3px; display: inline-block; }
+  .gbars { display: grid; gap: .9em; }
+  .grp { display: grid; grid-template-columns: 7.5em 1fr; gap: 1em; align-items: center; }
+  .grp .name { font-size: 1.25em; color: var(--ink); text-align: right; }
+  .grp .name small { display: block; color: var(--slate); font-size: .75em; }
+  .grp .pair { display: grid; gap: 3px; }
+  .hb { display: flex; align-items: center; gap: .5em; height: 1.35em; font-size: 1.1em; }
+  .hb b { height: 100%; border-radius: 0 4px 4px 0; display: block; }
+  .hb.oa b { background: #3D6FC9; } .hb.gm b { background: #D9782B; }
+  .hb span { color: var(--ink); font-variant-numeric: tabular-nums; }
+  .hb:hover b { filter: brightness(1.1); }
+
+  /* Context budget */
+  .budget { display: flex; height: 7em; border-radius: .6em; overflow: hidden; font-size: 1.15em; }
+  .budget div { display: flex; align-items: center; justify-content: center; text-align: center; padding: 0 .6em; font-weight: 600; color: var(--ink); line-height: 1.25; }
+  .budget .ans { background: transparent; border: 2px dashed var(--orange); color: var(--cream); border-radius: 0 .6em .6em 0; }
+  .span-row { display: flex; margin-top: .8em; font-size: 1.1em; }
+  .span-row div { text-align: center; padding-top: .5em; border-top: 2px solid var(--mist); color: var(--mist); }
+  .span-row div.o { border-color: var(--orange); color: var(--orange); }
+  .win-label { text-align: center; font-size: 1.3em; color: var(--cream); margin-bottom: .7em; }
+  .win-label b { color: var(--orange); }
+
+  /* Overflow */
+  .tokrow { display: flex; gap: 3px; margin: .6em 0 1em; }
+  .tokrow span { flex: 1; height: 2.2em; border-radius: 3px; background: #D8E4F8; display: flex; align-items: center; justify-content: center; font-size: 1em; color: var(--ink); }
+  .tokrow span.sec { background: var(--orange); font-weight: 600; flex: 1.6; }
+  .tokrow span.gone { opacity: .25; text-decoration: line-through; }
+  .errbox { font-family: var(--mono); font-size: 1.2em; background: #FDECEC; border: 1px solid #E5A3A3; border-radius: .4em; padding: .8em 1em; color: #8B1E1E; margin: .4em 0 1em; }
+  .result { display: grid; grid-template-columns: 11em 1fr auto; gap: 1.2em; align-items: center; background: var(--ink-2); border-radius: .6em; padding: 1.2em 1.6em; margin-bottom: .9em; font-size: 1.4em; }
+  .result .ctx { font-family: var(--mono); color: var(--mist); }
+  .result .seen { color: var(--mist); }
+  .result .ans { font-family: var(--mono); font-weight: 600; padding: .3em .7em; border-radius: .3em; }
+  .result .ok { background: #DDEBD3; color: var(--ink); }
+  .result .bad { background: #FDECEC; color: #8B1E1E; }
+
+  /* Bars (chat growth) */
+  .vbars { display: flex; align-items: flex-end; gap: .8em; height: 22em; padding: 0 .5em; border-bottom: 2px solid var(--slate); }
+  .vbars div { flex: 1; background: var(--mist); border-radius: 4px 4px 0 0; position: relative; }
+  .vbars div.last { background: var(--orange); }
+  .vbars div span { position: absolute; top: -1.6em; left: 50%; transform: translateX(-50%); font-size: 1.05em; color: var(--cream); font-variant-numeric: tabular-nums; }
+  .vlabels { display: flex; gap: .8em; padding: .5em .5em 0; }
+  .vlabels span { flex: 1; text-align: center; font-size: 1em; color: var(--mist); }
+  .axis-cap { font-size: 1.15em; color: var(--mist); margin-bottom: 2.4em; }
+  .big-stat { font: 700 4.4em/1 var(--head); color: var(--orange); }
+  .big-stat-l { font-size: 1.3em; color: var(--mist); margin: .3em 0 1.4em; }
+
+  /* Cost */
+  .formula { font-family: var(--mono); font-size: 1.35em; line-height: 1.9; background: var(--ink); color: var(--cream); border-radius: .6em; padding: 1.2em 1.6em; }
+  .formula .o { color: var(--orange); }
+  .think { width: 100%; border-collapse: collapse; font-size: 1.35em; }
+  .think th, .think td { padding: .6em .7em; border-bottom: 1px solid var(--line-light); text-align: right; }
+  .think th:first-child, .think td:first-child { text-align: left; }
+  .think thead th { color: var(--slate); font-weight: 500; font-size: .85em; text-transform: uppercase; letter-spacing: .05em; }
+  .think .hot { color: var(--rust); font-weight: 700; }
+
+  /* Latency */
+  .timeline { display: flex; height: 6em; border-radius: .6em; overflow: hidden; font-size: 1.2em; }
+  .timeline div { display: flex; flex-direction: column; justify-content: center; padding: 0 1em; color: var(--ink); line-height: 1.35; }
+  .timeline small { font-size: .8em; color: var(--slate); }
+  .ttft { position: relative; margin-top: 1.4em; height: 4.5em; font-size: 1.15em; }
+  .ttft .bar1, .ttft .bar2 { position: absolute; left: 0; height: 2px; }
+  .ttft .bar1 { top: .4em; background: var(--mist); }
+  .ttft .bar2 { top: 2.6em; background: var(--cream); width: 100%; }
+  .ttft span { position: absolute; color: var(--mist); }
+  .lat { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.3em; margin-top: 1.6em; }
+  .lat .card p.n { font: 700 2.6em/1 var(--head); color: var(--orange); margin-bottom: .2em; }
+
+  /* Fixes */
+  .fix { display: grid; gap: .6em; }
+  .fix div { display: grid; grid-template-columns: 1fr 1.35fr; gap: 1.2em; background: var(--paper); border: 1px solid var(--line-light); border-radius: .5em; padding: .9em 1.4em; font-size: 1.35em; }
+  .fix i { font-style: normal; color: var(--slate); }
+
+  .s-interview blockquote { margin: 0 0 1em; font: 500 2.6em/1.22 var(--head); letter-spacing: -.02em; }
+  .answer { background: var(--ink-2); border-left: 3px solid var(--orange); border-radius: .4em; padding: 1.4em 1.8em; }
+  .answer .label { font-size: 1em; color: var(--mist); margin-bottom: .6em; }
+  .answer p { font-size: 1.3em; line-height: 1.6; }
+  .s-next { display: flex; flex-direction: column; justify-content: center; }
+  .s-next h2 { font-size: 4.6em; margin-bottom: .45em; }
+  .pills { display: flex; gap: 1em; flex-wrap: wrap; margin-bottom: 2em; }
+  .pills span { background: var(--cream); border-radius: 999px; padding: .6em 1.6em; font-size: 1.6em; }
+  .s-next .msg { font-size: 1.6em; }
+  .s-next .msg a { color: var(--ink); }
+
+  @media (max-width: 720px) {
+    .s-title .big-num { display: none; }
+    .s-title h1 { font-size: 5em; }
+    .s-statement .big { font-size: 3.2em; }
+    .split, .lat { grid-template-columns: 1fr; gap: 1.6em; }
+    .budget { flex-direction: column; height: auto; }
+    .budget div { padding: .8em; flex: none !important; }
+    .budget .ans { border-radius: 0 0 .6em .6em; }
+    .span-row { display: none; }
+    .result { grid-template-columns: 1fr; gap: .3em; }
+    .vbars { height: 16em; gap: .4em; }
+    .vbars div span { font-size: .85em; }
+    .timeline { flex-direction: column; height: auto; }
+    .timeline div { padding: .8em 1em; flex: none !important; }
+    .ttft { display: none; }
+    .fix div { grid-template-columns: 1fr; gap: .2em; }
+    .s-interview blockquote { font-size: 2.2em; }
+    .s-next h2 { font-size: 3.4em; }
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="../">GenAI <span>Zero to Production</span></a>
+  <nav aria-label="Episode">
+    <a href="https://github.com/Amitpnk/genai-zero-to-production/tree/main/ep04-tokens-and-context-windows">Episode notes</a>
+    <a href="https://github.com/Amitpnk/genai-zero-to-production">GitHub repo</a>
+    <button class="btn" type="button" data-present>Present (P)</button>
+  </nav>
+</header>
+
+<main class="deck" aria-label="Episode 4 slides">
+
+  <!-- 1 -->
+  <section class="slide dark s-title" aria-label="Title">
+    <div class="big-num" aria-hidden="true">04</div>
+    <p class="eyebrow">GenAI Engineering · Episode 04</p>
+    <h1>Tokens and<br>context windows</h1>
+    <p class="sub">Why token counts drive cost, latency and truncation, and how to measure them.</p>
+    <p class="byline">Amit · Generative AI &amp; Agentic AI Instructor</p>
+  </section>
+
+  <!-- 2 -->
+  <section class="slide light s-statement" aria-label="The big idea">
+    <p class="eyebrow">The big idea</p>
+    <p class="big">Everything is measured in tokens.</p>
+    <p class="lead">What you <span class="accent">pay</span>, how long you <span class="accent">wait</span>, and how much the model can <span class="accent">see</span>.</p>
+    <p class="foot">GenAI #4 · Tokens and context windows</p>
+  </section>
+
+  <!-- 3 -->
+  <section class="slide light" aria-label="Same text, different counts">
+    <h2>Same text, different token counts</h2>
+    <div class="split">
+      <figure style="margin:0">
+        <div class="legend"><span><i style="background:#3D6FC9"></i>OpenAI (o200k_base)</span><span><i style="background:#D9782B"></i>Gemini</span></div>
+        <div class="gbars" role="list">
+          <div class="grp" role="listitem"><p class="name">English<small>87 chars</small></p><div class="pair"><p class="hb oa" title="OpenAI: 18 tokens"><b style="width:35%"></b><span>18</span></p><p class="hb gm" title="Gemini: 19 tokens"><b style="width:37%"></b><span>19</span></p></div></div>
+          <div class="grp" role="listitem"><p class="name">Hindi<small>98 chars</small></p><div class="pair"><p class="hb oa" title="OpenAI: 37 tokens"><b style="width:72%"></b><span>37</span></p><p class="hb gm" title="Gemini: 30 tokens"><b style="width:59%"></b><span>30</span></p></div></div>
+          <div class="grp" role="listitem"><p class="name">Code<small>66 chars</small></p><div class="pair"><p class="hb oa" title="OpenAI: 27 tokens"><b style="width:53%"></b><span>27</span></p><p class="hb gm" title="Gemini: 31 tokens"><b style="width:61%"></b><span>31</span></p></div></div>
+          <div class="grp" role="listitem"><p class="name">JSON<small>77 chars</small></p><div class="pair"><p class="hb oa" title="OpenAI: 29 tokens"><b style="width:57%"></b><span>29</span></p><p class="hb gm" title="Gemini: 34 tokens"><b style="width:66%"></b><span>34</span></p></div></div>
+          <div class="grp" role="listitem"><p class="name">Numbers<small>45 chars</small></p><div class="pair"><p class="hb oa" title="OpenAI: 25 tokens"><b style="width:49%"></b><span>25</span></p><p class="hb gm" title="Gemini: 46 tokens"><b style="width:90%"></b><span>46</span></p></div></div>
+        </div>
+      </figure>
+      <ul class="points">
+        <li><b>English</b> is cheapest: about 4 characters per token.</li>
+        <li><b>Code, JSON, numbers</b> and other languages cost more per character.</li>
+        <li>Gemini splits <b>numbers digit by digit</b>: 45 characters → 46 tokens.</li>
+        <li>Always count with <b>your model's</b> tokenizer.</li>
+      </ul>
+    </div>
+    <p class="foot">Real output from count_tokens.py</p>
+  </section>
+
+  <!-- 4 -->
+  <section class="slide dark" aria-label="How to count tokens">
+    <h2>How to count tokens</h2>
+    <div class="row cols-4">
+      <div class="card"><p class="label">OpenAI</p><h3>tiktoken</h3><p>Runs locally, free and offline.</p></div>
+      <div class="card"><p class="label">Gemini</p><h3>count_tokens()</h3><p>Free API call, before you send.</p></div>
+      <div class="card"><p class="label">Claude</p><h3>count_tokens()</h3><p>Free API call, before you send.</p></div>
+      <div class="card hl"><p class="label">Every response</p><h3>usage</h3><p>Exact input and output counts: what you're billed for. Log it.</p></div>
+    </div>
+    <p class="foot">GenAI #4 · Tokens and context windows</p>
+  </section>
+
+  <!-- 5 -->
+  <section class="slide dark" aria-label="The context window">
+    <p class="eyebrow">The context window</p>
+    <h2>Everything in one request must fit</h2>
+    <p class="win-label"><b>Context window</b> = input + output, per request</p>
+    <div class="budget" role="img" aria-label="The context window holds the system prompt, tool definitions, chat history, retrieved documents and your question as input, plus room for the answer as output.">
+      <div style="flex:1.2;background:#D8E4F8">System prompt</div>
+      <div style="flex:1.3;background:#EEDDF0">Tool definitions</div>
+      <div style="flex:2.4;background:#F5E7B5">Chat history</div>
+      <div style="flex:2.4;background:#DDEBD3">Retrieved documents</div>
+      <div style="flex:1.2;background:#F8DCC0">Your question</div>
+      <div class="ans" style="flex:2">Room for the answer</div>
+    </div>
+    <div class="span-row" aria-hidden="true"><div style="flex:8.5">input tokens: you pay for all of this, every request</div><div class="o" style="flex:2">output (costs more)</div></div>
+    <p class="lead">gemma3:1b supports 32,768 tokens, but Ollama uses <strong>4,096</strong> by default. Cloud models go from ~100K to over 1M. <span class="accent">Bigger isn't free.</span></p>
+    <p class="foot">GenAI #4 · Tokens and context windows</p>
+  </section>
+
+  <!-- 6 -->
+  <section class="slide light" aria-label="When it doesn't fit">
+    <h2>When the prompt doesn't fit</h2>
+    <div class="row cols-2">
+      <div class="card">
+        <p class="label">A · Most cloud APIs</p>
+        <h3>An error</h3>
+        <p class="errbox">400: prompt is too long</p>
+        <p>Loud, so you notice and fix it.</p>
+      </div>
+      <div class="card hl">
+        <p class="label">B · Ollama, many chat apps</p>
+        <h3>Silent truncation</h3>
+        <div class="tokrow" aria-label="The oldest tokens, including the secret, are dropped"><span class="sec gone">secret</span><span class="gone">…</span><span class="gone">…</span><span>…</span><span>…</span><span>…</span><span>…</span></div>
+        <p>The <b>oldest tokens are dropped</b>. No error, just a quietly wrong answer. That's why chatbots “forget”.</p>
+      </div>
+    </div>
+    <p class="foot">GenAI #4 · Tokens and context windows</p>
+  </section>
+
+  <!-- 7 -->
+  <section class="slide dark" aria-label="Demo: the secret code">
+    <p class="eyebrow">Demo · context_overflow.py</p>
+    <h2>A secret at the start of 1,350 tokens</h2>
+    <div class="result"><span class="ctx">num_ctx = 4096</span><span class="seen">model saw 1,350 tokens</span><span class="ans ok">BLUE-TIGER-42</span></div>
+    <div class="result"><span class="ctx">num_ctx = 512</span><span class="seen">model saw only the last 259</span><span class="ans bad">Note 51</span></div>
+    <p class="lead">Same model, same prompt. With the small window the secret was <span class="accent">silently cut off</span>, and the model confidently answered something else.</p>
+    <p class="foot">Real output · gemma3:1b with Ollama</p>
+  </section>
+
+  <!-- 8 -->
+  <section class="slide light" aria-label="Lost in the middle">
+    <h2>Even when it fits: lost in the middle</h2>
+    <div class="split">
+      <svg viewBox="0 0 640 340" style="width:100%;height:auto" role="img" aria-labelledby="lim-t">
+        <title id="lim-t">Illustrative U-shaped curve: models recall information at the start and end of a long prompt better than information in the middle.</title>
+        <rect x="1" y="1" width="638" height="338" rx="14" fill="#FBFAF6" stroke="#E3DED3"/>
+        <line x1="60" y1="270" x2="600" y2="270" stroke="#4A5568" stroke-width="1.5"/>
+        <line x1="60" y1="40" x2="60" y2="270" stroke="#4A5568" stroke-width="1.5"/>
+        <path d="M70,70 C200,240 460,240 590,80" fill="none" stroke="#A4500C" stroke-width="4"/>
+        <circle cx="70" cy="70" r="7" fill="#A4500C"/><circle cx="330" cy="197" r="7" fill="#A4500C"/><circle cx="590" cy="80" r="7" fill="#A4500C"/>
+        <g font-family="IBM Plex Sans, sans-serif" font-size="17" fill="#4A5568">
+          <text x="70" y="298">start</text><text x="330" y="298" text-anchor="middle">middle</text><text x="590" y="298" text-anchor="end">end</text>
+          <text x="330" y="325" text-anchor="middle" font-size="15">where the fact sits in a long prompt</text>
+          <text x="30" y="160" transform="rotate(-90 30 160)" text-anchor="middle" font-size="15">how reliably it's used</text>
+        </g>
+      </svg>
+      <ul class="points">
+        <li>Models use facts at the <b>start and end</b> of long prompts more reliably than ones in the <b>middle</b>.</li>
+        <li>Put key instructions and facts <b>first or last</b>.</li>
+        <li>Better still: send <b>less</b>. Only what the question needs.</li>
+      </ul>
+    </div>
+    <p class="foot">Illustrative · based on “Lost in the Middle” (Liu et al., 2023)</p>
+  </section>
+
+  <!-- 9 -->
+  <section class="slide dark" aria-label="Chat history growth">
+    <h2>Every turn resends the whole chat</h2>
+    <div class="split">
+      <figure style="margin:0">
+        <p class="axis-cap">Input tokens sent with each turn</p>
+        <div class="vbars" role="list">
+          <div role="listitem" title="Turn 1: 29 tokens" style="height:3.7%"><span>29</span></div>
+          <div role="listitem" title="Turn 2: 113 tokens" style="height:14.4%"><span>113</span></div>
+          <div role="listitem" title="Turn 3: 197 tokens" style="height:25.1%"><span>197</span></div>
+          <div role="listitem" title="Turn 4: 281 tokens" style="height:35.8%"><span>281</span></div>
+          <div role="listitem" title="Turn 5: 365 tokens" style="height:46.5%"><span>365</span></div>
+          <div role="listitem" title="Turn 6: 449 tokens" style="height:57.2%"><span>449</span></div>
+          <div role="listitem" title="Turn 7: 533 tokens" style="height:67.9%"><span>533</span></div>
+          <div role="listitem" title="Turn 8: 617 tokens" style="height:78.6%"><span>617</span></div>
+          <div role="listitem" title="Turn 9: 701 tokens" style="height:89.3%"><span>701</span></div>
+          <div role="listitem" title="Turn 10: 785 tokens" class="last" style="height:100%"><span>785</span></div>
+        </div>
+        <div class="vlabels" aria-hidden="true"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span>10</span></div>
+      </figure>
+      <div>
+        <p class="big-stat">~17 → 4,070</p>
+        <p class="big-stat-l">tokens per new message → total input after 10 turns</p>
+        <ul class="points">
+          <li>The model has <b>no memory</b>: your app resends everything.</li>
+          <li>Cost and latency <b>snowball</b> as chats get longer.</li>
+          <li>Multiply by every user, every day.</li>
+        </ul>
+      </div>
+    </div>
+    <p class="foot">Real output from chat_history_growth.py</p>
+  </section>
+
+  <!-- 10 -->
+  <section class="slide light" aria-label="Cost">
+    <h2>Cost: input vs output</h2>
+    <div class="split">
+      <div>
+        <p class="formula">cost = input_tokens × <span class="o">input_price</span><br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ output_tokens × <span class="o">output_price</span></p>
+        <p class="lead" style="font-size:1.45em">Output usually costs <strong>several times more</strong> than input. Prices are per million tokens and change often.</p>
+      </div>
+      <div>
+        <table class="think">
+          <thead><tr><th scope="col">gemini-3.8-flash</th><th scope="col">In</th><th scope="col">Out</th><th scope="col">Thinking</th></tr></thead>
+          <tbody>
+            <tr><td>~20 words</td><td>11</td><td>24</td><td class="hot">547</td></tr>
+            <tr><td>~400 words</td><td>12</td><td>464</td><td class="hot">850</td></tr>
+          </tbody>
+        </table>
+        <p class="lead" style="font-size:1.35em">Hidden <span class="accent">thinking tokens</span> are billed as output: 23× the visible answer here.</p>
+      </div>
+    </div>
+    <p class="foot">Real output from cost_and_latency.py</p>
+  </section>
+
+  <!-- 11 -->
+  <section class="slide dark" aria-label="Latency">
+    <h2>Where the waiting time goes</h2>
+    <div class="timeline" role="img" aria-label="Timeline: reading the input is fast, optional thinking follows, the first token appears, then the answer is written one token at a time.">
+      <div style="flex:1.4;background:#D8E4F8"><b>Read input</b><small>all at once: fast</small></div>
+      <div style="flex:1.6;background:#EEDDF0"><b>Thinking</b><small>optional, hidden</small></div>
+      <div style="flex:3.4;background:#F8DCC0;border-left:3px dashed #A4500C"><b>Write the answer</b><small>one token at a time: longer answer = longer wait</small></div>
+    </div>
+    <div class="lat">
+      <div class="card"><p class="n">5.0 s</p><h3>~20-word answer</h3><p>total time, mostly thinking</p></div>
+      <div class="card"><p class="n">10.3 s</p><h3>first text, ~400 words</h3><p>time to first token (TTFT)</p></div>
+      <div class="card hl"><p class="n">14.9 s</p><h3>~400-word answer</h3><p>total: output length dominates</p></div>
+    </div>
+    <p class="foot">Real run · gemini-3.8-flash · streaming shows the first words early</p>
+  </section>
+
+  <!-- 12 -->
+  <section class="slide light" aria-label="Keep prompts small">
+    <h2>Keep it small, fast and cheap</h2>
+    <div class="fix">
+      <div><i>Long chat history</i><b>Keep recent turns, summarise older ones</b></div>
+      <div><i>Pasting whole documents</i><b>Retrieve only relevant chunks (RAG, Module 4)</b></div>
+      <div><i>Rambling answers</i><b>Ask for brevity, set max_tokens</b></div>
+      <div><i>Same big prompt every time</i><b>Prompt caching (Module 10)</b></div>
+      <div><i>Key facts get missed</i><b>Put them first or last</b></div>
+      <div><i>Not sure what you spent</i><b>Log usage from every response</b></div>
+    </div>
+    <p class="foot">GenAI #4 · Tokens and context windows</p>
+  </section>
+
+  <!-- 13 -->
+  <section class="slide dark s-interview" aria-label="Interview question">
+    <p class="eyebrow">Interview question · FDE</p>
+    <blockquote>“Our support chatbot gets slower and pricier as conversations grow, and forgets what users said at the start. Why, and what do you do?”</blockquote>
+    <div class="answer">
+      <p class="label">A strong answer</p>
+      <p>The model has no memory, so every turn resends the whole chat: input tokens snowball, so cost and latency rise. Past the context window, the oldest messages are trimmed, so it forgets. <b>Measure</b> token usage per turn, then keep recent turns plus a summary, retrieve only relevant knowledge, cap output, and cache the fixed system prompt.</p>
+    </div>
+    <p class="foot">Pause the video and say it in your own words.</p>
+  </section>
+
+  <!-- 14 -->
+  <section class="slide orange s-next" aria-label="Up next">
+    <p class="eyebrow">Up next · Episode 05</p>
+    <h2>Sampling parameters</h2>
+    <div class="pills"><span>Temperature</span><span>Top-p</span><span>Max tokens</span><span>Stop sequences</span></div>
+    <p class="msg">Run the four demos: <a href="https://github.com/Amitpnk/genai-zero-to-production/tree/main/ep04-tokens-and-context-windows">count, overflow, history, cost</a>.</p>
+    <p class="foot">GenAI #4 · Tokens and context windows</p>
+  </section>
+
+</main>
+
+<p class="present-hint">← → to move · Esc to exit</p>
+<script src="../assets/deck.js"></script>
+</body>
+</html>

@@ -239,4 +239,4 @@ Practise it: say it out loud in your own words before moving on.
 
 ## Next up
 
-**Episode 04: Tokenization and context windows.** Why token counts drive cost, latency and truncation, and how to measure them for Claude, GPT and Gemini.
+**[Episode 04: Tokenization and context windows](../ep04-tokens-and-context-windows/).** Why token counts drive cost, latency and truncation, and how to measure them for Claude, GPT and Gemini.

@@ -39,6 +39,7 @@ genai-zero-to-production/
 | 01 | What is GenAI Engineering? | [ep01-what-is-genai-engineering](ep01-what-is-genai-engineering/) |
 | 02 | Dev Environment Setup | [ep02-setup](ep02-setup/) |
 | 03 | How LLMs actually work | [ep03-how-llms-work](ep03-how-llms-work/) |
+| 04 | Tokens and context windows | [ep04-tokens-and-context-windows](ep04-tokens-and-context-windows/) |
 
 ## Syllabus: 42 episodes, 10 modules + capstone
 
