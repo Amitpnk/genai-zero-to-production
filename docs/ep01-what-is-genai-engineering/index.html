@@ -1,0 +1,356 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ep 01 · What is GenAI Engineering? · GenAI Zero to Production</title>
+<meta name="description" content="Slides for GenAI Engineering Episode 1: what GenAI Engineering is, how it differs from ML engineering and data science, and the roadmap for the playlist.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/deck.css">
+<style>
+  /* Title slide */
+  .s-title { display: flex; flex-direction: column; justify-content: center; }
+  .s-title .big-num {
+    position: absolute; right: .3em; top: .05em;
+    font: 700 20em/1 var(--head); color: #1A2840; letter-spacing: -.04em;
+  }
+  .s-title h1 { position: relative; font-size: 7.4em; font-weight: 500; line-height: .98; letter-spacing: -.02em; margin-bottom: .45em; }
+  .s-title .sub { position: relative; font-size: 1.75em; line-height: 1.45; color: var(--mist); max-width: 30em; }
+  .s-title .byline { display: flex; align-items: center; gap: 1em; margin-top: 2.6em; font-size: 1.15em; letter-spacing: .06em; color: var(--mist); }
+  .s-title .byline::before { content: ""; width: 3.3em; height: 2px; background: var(--orange); }
+
+  /* Big statement slides */
+  .s-statement { display: flex; flex-direction: column; justify-content: center; }
+  .s-statement .big { font: 700 4.4em/1.15 var(--head); letter-spacing: -.02em; max-width: 15em; margin-bottom: .6em; }
+  .s-statement .lead { font-size: 2.2em; max-width: 26em; margin-top: 0; }
+
+  /* Definition + formula */
+  .s-def .big { font: 700 3.4em/1.3 var(--head); letter-spacing: -.01em; max-width: 19em; }
+  .formula { position: absolute; left: 6.7em; right: 6.7em; bottom: 8.5em; display: flex; align-items: center; gap: .9em; }
+  .formula .term { flex: 1; text-align: center; background: var(--ink-2); border: 1px solid var(--line-dark); border-radius: .6em; padding: 1.1em .6em; font-size: 1.4em; font-weight: 600; }
+  .formula .term.fill { background: var(--orange); border-color: var(--orange); color: var(--ink); }
+  .formula .op { color: var(--blue); font-size: 1.8em; }
+
+  /* Roles table */
+  .s-roles .cmp { font-size: 1.3em; }
+  .s-roles .cmp tbody td { color: var(--ink); }
+
+  /* Effort slide */
+  .s-effort .grid { display: grid; grid-template-columns: 1fr auto 1fr; gap: 2.2em; align-items: center; }
+  .s-effort .card ul { margin: 0; padding-left: 1.2em; font-size: 1.35em; line-height: 1.8; color: var(--mist); }
+  .s-effort .card .label { text-transform: uppercase; letter-spacing: .16em; font-size: 1em; }
+  .s-effort .card.hl .label { color: var(--orange); }
+  .s-effort .arrow { width: 3.4em; height: 3.4em; color: var(--orange); }
+
+  /* Six skills */
+  .s-skills .card { padding: 1.6em 1.6em; }
+  .s-skills .card h3 { margin-bottom: .35em; }
+  .s-skills .icon { margin-bottom: .6em; width: 1.7em; height: 1.7em; }
+
+  /* Stack */
+  .s-stack .grid { display: grid; grid-template-columns: 1fr 15em; gap: 1em; }
+  .layers { display: grid; gap: .6em; }
+  .layers div { display: flex; justify-content: space-between; align-items: center; gap: 1em; background: #1C2B45; border: 1px solid var(--line-dark); border-radius: .4em; padding: .95em 1.3em; }
+  .layers b { font-size: 1.4em; }
+  .layers span { font-size: 1.15em; color: var(--mist); text-align: right; }
+  .evalbox { background: var(--orange); color: var(--ink); border-radius: .4em; padding: 1.6em 1.4em; display: flex; flex-direction: column; justify-content: center; }
+  .evalbox h3 { font-size: 1.5em; margin-bottom: .5em; }
+  .evalbox p { font-size: 1.15em; line-height: 1.5; }
+  .evalbox .icon { color: var(--ink); width: 1.7em; height: 1.7em; }
+
+  /* Audience */
+  .s-who .card { padding: 1.7em 1.6em; }
+  .s-who .icon { width: 1.7em; height: 1.7em; margin-bottom: .7em; }
+  .s-who .card h3 { margin-bottom: .4em; }
+  .s-who .need { position: absolute; left: 3.83em; bottom: 3.9em; font-size: 1.75em; color: var(--slate); }
+  .s-who .need b { color: var(--ink); }
+
+  /* Roadmap */
+  .modules { display: grid; grid-template-columns: repeat(5, 1fr); gap: .8em; }
+  .modules div { background: var(--ink-2); border: 1px solid var(--line-dark); border-radius: .5em; padding: 1.1em 1.1em; }
+  .modules i { font-style: normal; font-size: 1em; color: var(--orange); display: block; margin-bottom: .4em; }
+  .modules .agents i { color: var(--blue); }
+  .modules b { display: block; font-size: 1.2em; line-height: 1.3; margin-bottom: .35em; }
+  .modules span { font-size: 1em; color: var(--mist); }
+  .capstone { display: flex; justify-content: space-between; align-items: center; margin-top: 1em; background: var(--orange); color: var(--ink); border-radius: .5em; padding: 1.1em 1.4em; font-size: 1.3em; font-weight: 600; }
+  .capstone span { font-weight: 400; font-size: .85em; }
+
+  /* Episode format */
+  .flow { display: grid; grid-template-columns: repeat(5, 1fr); gap: 2.6em; margin-top: 2.5em; }
+  .flow .card { position: relative; padding: 1.4em 1.3em; }
+  .flow .card:not(:last-child)::after {
+    content: "→"; position: absolute; right: -1.45em; top: 50%; transform: translateY(-50%);
+    color: var(--rust); font-size: 1.5em;
+  }
+  .flow .card h3 { font-size: 1.45em; margin-bottom: .3em; }
+  .flow .card p { font-size: 1.1em; }
+  .repo-bar { display: flex; align-items: center; gap: .9em; margin-top: 4em; background: var(--ink); color: var(--cream); border-radius: .5em; padding: 1.2em 1.4em; font-size: 1.4em; }
+  .repo-bar svg { width: 1.2em; height: 1.2em; color: var(--orange); flex: none; }
+  .repo-bar a { color: var(--orange); }
+
+  /* Capstone statement */
+  .s-end h2 { font-size: 4.6em; max-width: 13em; margin-bottom: .4em; }
+  .s-end .msg { font-size: 1.8em; line-height: 1.45; max-width: 28em; }
+
+  /* Interview */
+  .s-interview blockquote { margin: 0 0 1.2em; font: 500 3.1em/1.2 var(--head); letter-spacing: -.02em; max-width: 19em; }
+  .answer { background: var(--ink-2); border-left: 3px solid var(--orange); border-radius: .4em; padding: 1.6em 1.8em; }
+  .answer .label { font-size: 1em; color: var(--mist); margin-bottom: .7em; }
+  .answer p { font-size: 1.45em; line-height: 1.6; }
+
+  /* Next */
+  .s-next { display: flex; flex-direction: column; justify-content: center; }
+  .s-next h2 { font-size: 4.6em; font-weight: 500; letter-spacing: -.03em; margin-bottom: .45em; }
+  .pills { display: flex; gap: .8em; flex-wrap: wrap; margin-bottom: 1.8em; }
+  .pills span { background: var(--paper); border: 1px solid var(--line-light); border-radius: 999px; padding: .5em 1.2em; font-size: 1.45em; }
+  .s-next .msg { font-size: 1.5em; color: var(--slate); }
+  .s-next .msg a { color: var(--rust); }
+
+  @media (max-width: 720px) {
+    .s-title .big-num { display: none; }
+    .s-title h1 { font-size: 5em; }
+    .s-statement .big, .s-def .big { font-size: 3em; }
+    .formula { position: static; flex-wrap: wrap; margin-top: 2em; }
+    .formula .term { flex: 1 1 40%; }
+    .s-effort .grid, .s-stack .grid { grid-template-columns: 1fr; }
+    .s-effort .arrow { transform: rotate(90deg); justify-self: center; }
+    .modules { grid-template-columns: 1fr 1fr; }
+    .flow { grid-template-columns: 1fr; gap: 1.6em; }
+    .flow .card:not(:last-child)::after { content: "↓"; right: auto; left: 50%; top: auto; bottom: -1.35em; transform: translateX(-50%); }
+    .s-who .need { position: static; margin-top: 1.4em; }
+    .s-roles .cmp { font-size: 1.2em; }
+    .s-roles .table-wrap { overflow-x: auto; }
+    .s-roles .cmp { min-width: 46em; }
+    .s-end h2, .s-next h2 { font-size: 3.4em; }
+    .s-interview blockquote { font-size: 2.5em; }
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="../">GenAI <span>Zero to Production</span></a>
+  <nav aria-label="Episode">
+    <a href="https://github.com/Amitpnk/genai-zero-to-production/tree/main/ep01-what-is-genai-engineering">Episode notes</a>
+    <a href="https://github.com/Amitpnk/genai-zero-to-production">GitHub repo</a>
+    <button class="btn" type="button" data-present>Present (P)</button>
+  </nav>
+</header>
+
+<main class="deck" aria-label="Episode 1 slides">
+
+  <!-- 1 -->
+  <section class="slide dark s-title" aria-label="Title">
+    <div class="big-num" aria-hidden="true">01</div>
+    <p class="eyebrow">GenAI Engineering · Episode 01</p>
+    <h1>What is GenAI<br>Engineering?</h1>
+    <p class="sub">How it differs from ML engineering and data science, and the roadmap for this playlist.</p>
+    <p class="byline">Amit · Generative AI &amp; Agentic AI Instructor</p>
+  </section>
+
+  <!-- 2 -->
+  <section class="slide light s-statement" aria-label="The big idea">
+    <p class="eyebrow">The big idea</p>
+    <p class="big">You don't need to train a model to build serious AI products.</p>
+    <p class="lead">You need to <span class="accent">engineer around one</span>: context, tools, evaluation and production.</p>
+    <p class="foot">GenAI #1 · What is GenAI Engineering?</p>
+  </section>
+
+  <!-- 3 -->
+  <section class="slide dark s-def" aria-label="Definition">
+    <p class="eyebrow">Definition</p>
+    <p class="big">GenAI Engineering is building reliable, production-ready applications <span class="accent">on top of</span> foundation models.</p>
+    <div class="formula" role="img" aria-label="Foundation model plus your data plus tools plus evaluation equals a product">
+      <span class="term">Foundation model</span><span class="op">+</span>
+      <span class="term">Your data</span><span class="op">+</span>
+      <span class="term">Tools</span><span class="op">+</span>
+      <span class="term">Evaluation</span><span class="op">=</span>
+      <span class="term fill">A product</span>
+    </div>
+    <p class="foot">The model is the engine. You build the car.</p>
+  </section>
+
+  <!-- 4 -->
+  <section class="slide light s-roles" aria-label="Three roles, three starting points">
+    <h2>Three roles, three starting points</h2>
+    <div class="table-wrap">
+      <table class="cmp">
+        <thead><tr><th scope="col"><span class="hide-sm">&nbsp;</span></th><th scope="col">Data Scientist</th><th scope="col">ML Engineer</th><th scope="col" class="accent">GenAI Engineer</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">Starts with</th><td>A business question</td><td>Data and a prediction task</td><td>A pre-trained foundation model</td></tr>
+          <tr><th scope="row">Core work</th><td>Analysis, statistics, experiments</td><td>Feature pipelines, training, serving</td><td>Context, RAG, tools, agents, evals</td></tr>
+          <tr><th scope="row">Typical output</th><td>Insights, dashboards, reports</td><td>A trained model in production</td><td>An AI app or agent</td></tr>
+          <tr><th scope="row">Key question</th><td>What does the data tell us?</td><td>How accurate can the model get?</td><td>Does the system work reliably?</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="foot">GenAI #1 · What is GenAI Engineering?</p>
+  </section>
+
+  <!-- 5 -->
+  <section class="slide dark s-effort" aria-label="Where the effort goes">
+    <h2>Where the effort goes</h2>
+    <div class="grid">
+      <div class="card">
+        <p class="label">Classic ML</p>
+        <h3>Training the model</h3>
+        <ul><li>Labeling and cleaning data</li><li>Feature engineering</li><li>Training and tuning</li></ul>
+      </div>
+      <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+      <div class="card hl">
+        <p class="label">GenAI Engineering</p>
+        <h3>Everything around the model</h3>
+        <ul><li>Context and retrieval</li><li>Tools and agents</li><li>Evals, cost and guardrails</li></ul>
+      </div>
+    </div>
+    <p class="foot">If you can write Python and call an API, you can start today.</p>
+  </section>
+
+  <!-- 6 -->
+  <section class="slide light s-skills" aria-label="Six things a GenAI engineer does">
+    <h2>Six things a GenAI engineer does</h2>
+    <div class="row cols-3">
+      <div class="card">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg>
+        <h3>Prompt &amp; context design</h3><p>What the model sees: instructions, examples, output formats</p>
+      </div>
+      <div class="card">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        <h3>Retrieval (RAG)</h3><p>Ground answers in your own documents and data</p>
+      </div>
+      <div class="card">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/><rect width="20" height="14" x="2" y="6" rx="2"/></svg>
+        <h3>Agents &amp; tools</h3><p>Call APIs, query databases, plug in MCP servers</p>
+      </div>
+      <div class="card hl">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
+        <h3>Evaluation</h3><p>Measure quality: the step that turns a demo into a product</p>
+      </div>
+      <div class="card">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg>
+        <h3>Deployment</h3><p>APIs, scaling and monitoring on platforms like AWS</p>
+      </div>
+      <div class="card">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        <h3>Cost &amp; guardrails</h3><p>Token spend, latency, prompt injection, sensitive data</p>
+      </div>
+    </div>
+    <p class="foot">GenAI #1 · What is GenAI Engineering?</p>
+  </section>
+
+  <!-- 7 -->
+  <section class="slide dark s-stack" aria-label="The GenAI application stack">
+    <h2>The GenAI application stack</h2>
+    <div class="grid">
+      <div class="layers">
+        <div><b>Application</b><span>Chat UI, APIs, Slack bots</span></div>
+        <div><b>Orchestration</b><span>Chains, agents, LangGraph</span></div>
+        <div><b>Context</b><span>RAG, vector DBs, knowledge graphs, MCP</span></div>
+        <div><b>Models</b><span>Claude, GPT, Gemini, Bedrock, open-weight</span></div>
+        <div><b>Infrastructure</b><span>AWS compute, containers, secrets</span></div>
+      </div>
+      <div class="evalbox">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="m7 15 4-4 3 3 4-5"/></svg>
+        <h3>Evaluation &amp; observability</h3>
+        <p>Traces, evals and cost dashboards across every layer</p>
+      </div>
+    </div>
+    <p class="foot">Every module in this playlist maps to one layer.</p>
+  </section>
+
+  <!-- 8 -->
+  <section class="slide light s-who" aria-label="Who this playlist is for">
+    <h2>Who this playlist is for</h2>
+    <div class="row cols-4">
+      <div class="card">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m18 16 4-4-4-4"/><path d="m6 8-4 4 4 4"/><path d="m14.5 4-5 16"/></svg>
+        <h3>Software developers</h3><p>Add AI to what you already build</p>
+      </div>
+      <div class="card">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5V19A9 3 0 0 0 21 19V5"/><path d="M3 12A9 3 0 0 0 21 12"/></svg>
+        <h3>ML and data folks</h3><p>Move from training models to building with them</p>
+      </div>
+      <div class="card">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z"/><path d="M22 10v6"/><path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5"/></svg>
+        <h3>Students and switchers</h3><p>A structured path, not random tutorials</p>
+      </div>
+      <div class="card">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        <h3>Interview prep</h3><p>AI engineer and Forward Deployed Engineer roles</p>
+      </div>
+    </div>
+    <p class="need">You need: <b>basic Python</b> and <b>comfort with APIs</b>. <span class="accent">No PhD, no GPU.</span></p>
+    <p class="foot">GenAI #1 · What is GenAI Engineering?</p>
+  </section>
+
+  <!-- 9 -->
+  <section class="slide dark" aria-label="The roadmap">
+    <h2>The roadmap: 10 modules + capstone</h2>
+    <div class="modules">
+      <div><i>01</i><b>LLM Foundations</b><span>Ep 3–7</span></div>
+      <div><i>02</i><b>Prompt Engineering</b><span>Ep 8–11</span></div>
+      <div><i>03</i><b>Embeddings &amp; Vector DBs</b><span>Ep 12–15</span></div>
+      <div><i>04</i><b>RAG &amp; Graph RAG</b><span>Ep 16–21</span></div>
+      <div><i>05</i><b>Fine-tuning &amp; Open Models</b><span>Ep 22–24</span></div>
+      <div><i>06</i><b>Multimodal GenAI</b><span>Ep 25–26</span></div>
+      <div class="agents"><i>07</i><b>Agentic AI Fundamentals</b><span>Ep 27–31</span></div>
+      <div class="agents"><i>08</i><b>MCP &amp; Multi-Agent</b><span>Ep 32–35</span></div>
+      <div class="agents"><i>09</i><b>Evals &amp; Observability</b><span>Ep 36–38</span></div>
+      <div class="agents"><i>10</i><b>Production on AWS</b><span>Ep 39–41</span></div>
+    </div>
+    <div class="capstone">Capstone · Ship an ask-your-docs agent on AWS <span>Ep 42</span></div>
+    <p class="foot">Orange: build with models · Blue: agents and production</p>
+  </section>
+
+  <!-- 10 -->
+  <section class="slide light" aria-label="How every episode works">
+    <h2>How every episode works</h2>
+    <div class="flow">
+      <div class="card"><p class="label">1</p><h3>Hook</h3><p>The why, in seconds</p></div>
+      <div class="card"><p class="label">2</p><h3>Concept</h3><p>Explained visually</p></div>
+      <div class="card hl"><p class="label">3</p><h3>Live code</h3><p>Build it together</p></div>
+      <div class="card"><p class="label">4</p><h3>Recap</h3><p>Lock in the idea</p></div>
+      <div class="card"><p class="label">5</p><h3>Next</h3><p>What's coming up</p></div>
+    </div>
+    <div class="repo-bar">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m18 16 4-4-4-4"/><path d="m6 8-4 4 4 4"/><path d="m14.5 4-5 16"/></svg>
+      <span>All code in one GitHub repo, organised by episode: <a href="https://github.com/Amitpnk/genai-zero-to-production">Amitpnk/genai-zero-to-production</a></span>
+    </div>
+    <p class="foot">GenAI #1 · What is GenAI Engineering?</p>
+  </section>
+
+  <!-- 11 -->
+  <section class="slide orange s-statement s-end" aria-label="Where we end up">
+    <p class="eyebrow">Where we end up</p>
+    <h2>Ship a production AI agent on AWS.</h2>
+    <p class="msg">RAG + MCP tools + evals + tracing, deployed with Bedrock and ECS Fargate. Not a notebook demo.</p>
+  </section>
+
+  <!-- 12 -->
+  <section class="slide dark s-interview" aria-label="Interview question">
+    <p class="eyebrow">Interview question · AI Engineer / FDE</p>
+    <blockquote>“How is GenAI engineering different from ML engineering?”</blockquote>
+    <div class="answer">
+      <p class="label">A 30-second answer</p>
+      <p>ML engineering trains and serves task-specific models on your own data. GenAI engineering starts from a foundation model and builds everything around it: context, tools, agents and evaluation. The core risk shifts from <b>model accuracy</b> to <b>system reliability</b>.</p>
+    </div>
+    <p class="foot">Pause the video and say it in your own words.</p>
+  </section>
+
+  <!-- 13 -->
+  <section class="slide light s-next" aria-label="Up next">
+    <p class="eyebrow">Up next · Episode 02</p>
+    <h2>Set up your GenAI dev environment</h2>
+    <div class="pills"><span>Python + uv</span><span>API keys: Anthropic, OpenAI, Gemini, Bedrock</span><span>GitHub repo walkthrough</span></div>
+    <p class="msg">Subscribe, and tell me in the comments: <span class="accent">what do you want to build with GenAI?</span> · <a href="../ep02-setup/">Episode 2 slides →</a></p>
+    <p class="foot">GenAI #1 · What is GenAI Engineering?</p>
+  </section>
+
+</main>
+
+<p class="present-hint">← → to move · Esc to exit</p>
+<script src="../assets/deck.js"></script>
+</body>
+</html>
