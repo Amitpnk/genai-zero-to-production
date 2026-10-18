@@ -195,6 +195,17 @@ uv run python ep03-how-llms-work/next_token.py    # local model with Ollama
    ollama pull gemma3:1b
    ```
 
+**Basic Ollama commands:**
+
+```bash
+ollama --version             # is Ollama installed?
+ollama list                  # models you've downloaded
+ollama run gemma3:1b         # chat with the model (type /bye to exit)
+ollama ps                    # models loaded in memory right now
+ollama stop gemma3:1b        # unload it and free the memory (~0.9 GB)
+ollama rm gemma3:1b          # delete it from disk (~815 MB)
+```
+
 New to Ollama? See the [Ollama cheat sheet](../guides/ollama/) for every command: running, listing and stopping models.
 
 | Error | Fix |
