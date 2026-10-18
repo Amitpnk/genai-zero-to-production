@@ -40,6 +40,7 @@ genai-zero-to-production/
 | 02 | Dev Environment Setup | [ep02-setup](ep02-setup/) |
 | 03 | How LLMs actually work | [ep03-how-llms-work](ep03-how-llms-work/) |
 | 04 | Tokens and context windows | [ep04-tokens-and-context-windows](ep04-tokens-and-context-windows/) |
+| 05 | Sampling parameters | [ep05-sampling-parameters](ep05-sampling-parameters/) |
 
 ## Syllabus: 42 episodes, 10 modules + capstone
 

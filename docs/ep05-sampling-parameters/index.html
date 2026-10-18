@@ -1,0 +1,370 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ep 05 · Sampling Parameters · GenAI Zero to Production</title>
+<meta name="description" content="Slides for GenAI Engineering Episode 5: temperature, top-p, top-k, max tokens, stop sequences and seeds, with real side-by-side outputs.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/deck.css">
+<style>
+  .s-title { display: flex; flex-direction: column; justify-content: center; }
+  .s-title .big-num { position: absolute; right: .3em; top: .05em; font: 700 20em/1 var(--head); color: #1A2840; letter-spacing: -.04em; }
+  .s-title h1 { position: relative; font-size: 7.4em; font-weight: 500; line-height: .98; letter-spacing: -.02em; margin-bottom: .45em; }
+  .s-title .sub { position: relative; font-size: 1.75em; line-height: 1.45; color: var(--mist); max-width: 32em; }
+  .s-title .byline { display: flex; align-items: center; gap: 1em; margin-top: 2.6em; font-size: 1.15em; letter-spacing: .06em; color: var(--mist); }
+  .s-title .byline::before { content: ""; width: 3.3em; height: 2px; background: var(--orange); }
+  .s-statement { display: flex; flex-direction: column; justify-content: center; }
+  .s-statement .big { font: 700 4.4em/1.12 var(--head); letter-spacing: -.02em; max-width: 15em; margin-bottom: .55em; }
+  .s-statement .lead { font-size: 2.1em; max-width: 26em; margin-top: 0; }
+
+  .split { display: grid; grid-template-columns: 1.3fr 1fr; gap: 3em; align-items: center; }
+  .points { margin: 0; padding: 0; list-style: none; display: grid; gap: 1em; }
+  .points li { font-size: 1.45em; line-height: 1.45; padding-left: 1.3em; position: relative; color: var(--slate); }
+  .dark .points li { color: var(--mist); }
+  .points li::before { content: ""; position: absolute; left: 0; top: .55em; width: .5em; height: .5em; border-radius: 50%; background: var(--rust); }
+  .dark .points li::before { background: var(--orange); }
+  .points b { color: var(--ink); }
+  .dark .points b { color: var(--cream); }
+
+  /* Pipeline */
+  .pipe { display: grid; grid-template-columns: repeat(5, 1fr); gap: 2.4em; margin-top: 1em; }
+  .pipe .card { position: relative; text-align: center; padding: 1.6em 1em; }
+  .pipe .card:not(:last-child)::after { content: "→"; position: absolute; right: -1.35em; top: 50%; transform: translateY(-50%); color: var(--mist); font-size: 1.5em; }
+  .pipe .card.knob { background: var(--orange); border-color: var(--orange); color: var(--ink); }
+  .pipe .card.knob p { color: var(--ink); }
+  .pipe .card h3 { font-size: 1.45em; margin-bottom: .3em; }
+  .pipe .card p { font-size: 1.1em; }
+  .pipe-params { display: grid; grid-template-columns: repeat(5, 1fr); gap: 2.4em; margin-top: .9em; }
+  .pipe-params span { text-align: center; font-family: var(--mono); font-size: 1.15em; color: var(--orange); }
+
+  /* Small multiples */
+  .multi { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2em; }
+  .multi h3 { font-size: 1.45em; margin-bottom: .2em; }
+  .multi .tag { font-size: 1.1em; color: var(--slate); margin-bottom: 1em; }
+  .mb { display: grid; grid-template-columns: 6.4em 1fr; gap: .7em; align-items: center; margin-bottom: .7em; font-size: 1.2em; }
+  .mb .t { text-align: right; color: var(--ink); }
+  .mb .tr { display: flex; align-items: center; gap: .5em; height: 1.4em; }
+  .mb .tr b { height: 100%; background: var(--mist); border-radius: 0 4px 4px 0; display: block; min-width: 2px; }
+  .mb.top .tr b { background: var(--rust); }
+  .mb .tr span { font-variant-numeric: tabular-nums; color: var(--slate); font-size: .9em; }
+
+  /* Side by side */
+  .sbs { width: 100%; border-collapse: collapse; font-size: 1.25em; }
+  .sbs th, .sbs td { padding: .75em .8em; border-bottom: 1px solid var(--line-dark); text-align: left; vertical-align: top; line-height: 1.4; }
+  .sbs thead th { color: var(--mist); font-weight: 500; font-size: .85em; text-transform: uppercase; letter-spacing: .06em; }
+  .sbs tbody th { font-family: var(--mono); color: var(--orange); white-space: nowrap; font-weight: 500; }
+  .sbs td { color: var(--cream); }
+  .sbs .same td { color: var(--mist); }
+
+  /* Recipe */
+  .recipe { display: grid; gap: .7em; }
+  .recipe div { display: grid; grid-template-columns: 1fr 9em; align-items: center; background: var(--paper); border: 1px solid var(--line-light); border-radius: .5em; padding: 1em 1.5em; font-size: 1.4em; }
+  .recipe b { font-family: var(--mono); color: var(--rust); text-align: right; }
+
+  /* Top-p */
+  .tp { display: flex; align-items: flex-end; gap: .7em; height: 19em; border-bottom: 2px solid var(--slate); position: relative; }
+  .tp div { flex: 1; border-radius: 4px 4px 0 0; background: #E3E0D9; position: relative; }
+  .tp div.keep { background: var(--orange); }
+  .tp div span { position: absolute; top: -1.6em; left: 50%; transform: translateX(-50%); font-size: 1.05em; color: var(--ink); white-space: nowrap; }
+  .tp .cut { position: absolute; top: 0; bottom: 0; border-left: 3px dashed var(--rust); background: none; flex: none; width: 0; }
+  .tpl { display: flex; gap: .7em; padding-top: .5em; }
+  .tpl span { flex: 1; text-align: center; font-size: .95em; color: var(--slate); }
+  .tpl span.keep { color: var(--ink); font-weight: 600; }
+
+  /* Ends */
+  .ends { display: grid; gap: .9em; }
+  .ends div { display: grid; grid-template-columns: 11em 1fr 10em; gap: 1.2em; align-items: center; background: var(--ink-2); border: 1px solid var(--line-dark); border-radius: .6em; padding: 1em 1.4em; }
+  .ends div.hot { border-color: var(--orange); }
+  .ends b { font-size: 1.35em; }
+  .ends code { font-size: 1.2em; color: var(--cream); }
+  .ends i { font-style: normal; font-family: var(--mono); font-size: 1.15em; color: var(--orange); text-align: right; }
+
+  /* Stacked thinking bars */
+  .stk { display: grid; gap: 1.1em; }
+  .stk .row2 { display: grid; grid-template-columns: 7.5em 1fr 13em; gap: 1em; align-items: center; font-size: 1.3em; }
+  .stk .lim { font-family: var(--mono); color: var(--mist); text-align: right; }
+  .stk .bar { display: flex; height: 1.7em; gap: 2px; }
+  .stk .th { background: #5F86CC; border-radius: 4px 0 0 4px; }
+  .stk .an { background: #D9782B; border-radius: 0 4px 4px 0; min-width: 4px; }
+  .stk .res { font-size: .85em; color: var(--mist); }
+  .stk .res b { font-family: var(--mono); color: var(--cream); }
+  .legend { display: flex; gap: 1.6em; font-size: 1.15em; color: var(--mist); margin-bottom: 1.3em; }
+  .legend span { display: inline-flex; align-items: center; gap: .5em; }
+  .legend i { width: .9em; height: .9em; border-radius: 3px; display: inline-block; }
+
+  /* Determinism */
+  .runs { display: grid; gap: .6em; }
+  .runs p { background: var(--paper); border: 1px solid var(--line-light); border-radius: .5em; padding: .8em 1.2em; font-size: 1.3em; }
+  .runs p b { font-family: var(--mono); color: var(--rust); margin-right: .6em; }
+  .runs h3 { font-size: 1.5em; margin: 0 0 .4em; }
+
+  /* Knobs table */
+  .knobs { width: 100%; border-collapse: collapse; font-size: 1.12em; }
+  .knobs th, .knobs td { padding: .6em .7em; border-bottom: 1px solid var(--line-dark); text-align: left; }
+  .knobs thead th { color: var(--mist); font-weight: 500; font-size: .85em; text-transform: uppercase; letter-spacing: .06em; }
+  .knobs tbody th { color: var(--cream); font-weight: 600; }
+  .knobs td { font-family: var(--mono); color: var(--mist); font-size: .95em; }
+  .knobs td.no { color: #5B6B85; }
+
+  .s-interview blockquote { margin: 0 0 1em; font: 500 2.8em/1.22 var(--head); letter-spacing: -.02em; }
+  .answer { background: var(--ink-2); border-left: 3px solid var(--orange); border-radius: .4em; padding: 1.4em 1.8em; }
+  .answer .label { font-size: 1em; color: var(--mist); margin-bottom: .6em; }
+  .answer p { font-size: 1.3em; line-height: 1.6; }
+  .s-next { display: flex; flex-direction: column; justify-content: center; }
+  .s-next h2 { font-size: 4.6em; margin-bottom: .45em; }
+  .pills { display: flex; gap: 1em; flex-wrap: wrap; margin-bottom: 2em; }
+  .pills span { background: var(--cream); border-radius: 999px; padding: .6em 1.6em; font-size: 1.6em; }
+  .s-next .msg { font-size: 1.6em; }
+  .s-next .msg a { color: var(--ink); }
+
+  @media (max-width: 720px) {
+    .s-title .big-num { display: none; }
+    .s-title h1 { font-size: 5em; }
+    .s-statement .big { font-size: 3.2em; }
+    .split, .multi { grid-template-columns: 1fr; gap: 1.6em; }
+    .pipe, .pipe-params { grid-template-columns: 1fr; gap: 1.6em; }
+    .pipe-params { display: none; }
+    .pipe .card:not(:last-child)::after { content: "↓"; right: auto; left: 50%; top: auto; bottom: -1.35em; transform: translateX(-50%); }
+    .ends div { grid-template-columns: 1fr; gap: .3em; }
+    .ends i { text-align: left; }
+    .stk .row2 { grid-template-columns: 1fr; gap: .3em; }
+    .stk .lim { text-align: left; }
+    .tp { height: 13em; gap: .3em; }
+    .tp div span { font-size: .75em; }
+    .tpl span { font-size: .7em; }
+    .scroll-x { overflow-x: auto; }
+    .scroll-x table { min-width: 44em; }
+    .recipe div { grid-template-columns: 1fr; }
+    .recipe b { text-align: left; }
+    .s-interview blockquote { font-size: 2.2em; }
+    .s-next h2 { font-size: 3.4em; }
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="../">GenAI <span>Zero to Production</span></a>
+  <nav aria-label="Episode">
+    <a href="https://github.com/Amitpnk/genai-zero-to-production/tree/main/ep05-sampling-parameters">Episode notes</a>
+    <a href="https://github.com/Amitpnk/genai-zero-to-production">GitHub repo</a>
+    <button class="btn" type="button" data-present>Present (P)</button>
+  </nav>
+</header>
+
+<main class="deck" aria-label="Episode 5 slides">
+
+  <!-- 1 -->
+  <section class="slide dark s-title" aria-label="Title">
+    <div class="big-num" aria-hidden="true">05</div>
+    <p class="eyebrow">GenAI Engineering · Episode 05</p>
+    <h1>Sampling<br>parameters</h1>
+    <p class="sub">Temperature, top-p, max tokens, stop sequences and seeds, with live side-by-side outputs.</p>
+    <p class="byline">Amit · Generative AI &amp; Agentic AI Instructor</p>
+  </section>
+
+  <!-- 2 -->
+  <section class="slide light s-statement" aria-label="The big idea">
+    <p class="eyebrow">The big idea</p>
+    <p class="big">The model gives you odds.</p>
+    <p class="lead">Sampling parameters decide <span class="accent">how you pick from them</span>, and <span class="accent">when to stop</span>.</p>
+    <p class="foot">GenAI #5 · Sampling parameters</p>
+  </section>
+
+  <!-- 3 -->
+  <section class="slide dark" aria-label="Where each knob acts">
+    <h2>Where each knob acts</h2>
+    <div class="pipe">
+      <div class="card"><h3>Model scores</h3><p>odds for every token</p></div>
+      <div class="card knob"><h3>Temperature</h3><p>sharpen or flatten</p></div>
+      <div class="card knob"><h3>Top-p / top-k</h3><p>cut the unlikely tail</p></div>
+      <div class="card knob"><h3>Sample</h3><p>pick one token</p></div>
+      <div class="card"><h3>Next token</h3><p>append, repeat until a stop</p></div>
+    </div>
+    <div class="pipe-params" aria-hidden="true"><span></span><span>temperature</span><span>top_p · top_k</span><span>seed</span><span>max_tokens · stop</span></div>
+    <p class="lead">Temperature <strong>0</strong> skips the dice: always take the top token (<span class="accent">greedy decoding</span>).</p>
+    <p class="foot">GenAI #5 · Sampling parameters</p>
+  </section>
+
+  <!-- 4 -->
+  <section class="slide light" aria-label="Temperature reshapes the odds">
+    <p class="eyebrow">Temperature · “My favourite ice cream flavour is …”</p>
+    <h2>Temperature reshapes the odds</h2>
+    <div class="multi">
+      <div>
+        <h3>T = 0.2</h3><p class="tag">focused</p>
+        <div class="mb top" title="pistachio 100.0%"><span class="t">pistachio</span><span class="tr"><b style="width:86.0%"></b><span>100%</span></span></div>
+        <div class="mb" title="strawberry 0.0%"><span class="t">strawberry</span><span class="tr"><b style="width:0.0%"></b><span>0%</span></span></div>
+        <div class="mb" title="raspberry 0.0%"><span class="t">raspberry</span><span class="tr"><b style="width:0.0%"></b><span>0%</span></span></div>
+        <div class="mb" title="salted 0.0%"><span class="t">salted</span><span class="tr"><b style="width:0.0%"></b><span>0%</span></span></div>
+      </div>
+      <div>
+        <h3>T = 1.0</h3><p class="tag">the model's own odds</p>
+        <div class="mb top" title="pistachio 70.9%"><span class="t">pistachio</span><span class="tr"><b style="width:61.0%"></b><span>70.9%</span></span></div>
+        <div class="mb" title="strawberry 10.7%"><span class="t">strawberry</span><span class="tr"><b style="width:9.2%"></b><span>10.7%</span></span></div>
+        <div class="mb" title="raspberry 5.3%"><span class="t">raspberry</span><span class="tr"><b style="width:4.6%"></b><span>5.3%</span></span></div>
+        <div class="mb" title="salted 3.4%"><span class="t">salted</span><span class="tr"><b style="width:2.9%"></b><span>3.4%</span></span></div>
+      </div>
+      <div>
+        <h3>T = 2.0</h3><p class="tag">adventurous</p>
+        <div class="mb top" title="pistachio 36.3%"><span class="t">pistachio</span><span class="tr"><b style="width:31.2%"></b><span>36.3%</span></span></div>
+        <div class="mb" title="strawberry 14.1%"><span class="t">strawberry</span><span class="tr"><b style="width:12.1%"></b><span>14.1%</span></span></div>
+        <div class="mb" title="raspberry 9.9%"><span class="t">raspberry</span><span class="tr"><b style="width:8.5%"></b><span>9.9%</span></span></div>
+        <div class="mb" title="salted 7.9%"><span class="t">salted</span><span class="tr"><b style="width:6.8%"></b><span>7.9%</span></span></div>
+      </div>
+    </div>
+    <p class="foot">Real odds from temperature_dial.py · gemma3:1b · top 4 of 10 shown</p>
+  </section>
+
+  <!-- 5 -->
+  <section class="slide dark" aria-label="Side by side">
+    <h2>Same prompt, side by side</h2>
+    <p class="lead" style="margin:-.6em 0 1em;font-size:1.4em">“Write a one-sentence slogan for a coffee shop”</p>
+    <div class="scroll-x">
+      <table class="sbs">
+        <thead><tr><th scope="col">Temp</th><th scope="col">Run 1</th><th scope="col">Run 2</th><th scope="col">Run 3</th></tr></thead>
+        <tbody>
+          <tr class="same"><th scope="row">0</th><td>Fuel your day, one cup at a time.</td><td>Fuel your day, one cup at a time.</td><td>Fuel your day, one cup at a time.</td></tr>
+          <tr><th scope="row">0.8</th><td>Your daily dose of happiness.</td><td>Your daily dose of comfort and connection.</td><td>Fuel your day, savor the moment.</td></tr>
+          <tr><th scope="row">1.8</th><td>Fuel your day, one delicious cup at a time.</td><td>A daily dose of comfort.</td><td>Brewed with love and served with joy.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="foot">Real output from side_by_side.py · gemma3:1b</p>
+  </section>
+
+  <!-- 6 -->
+  <section class="slide light" aria-label="What temperature to use">
+    <h2>What temperature to use</h2>
+    <div class="recipe">
+      <div><span>Extraction, classification, code, maths</span><b>0 – 0.3</b></div>
+      <div><span>Q&amp;A, summaries, chat</span><b>0.3 – 0.8</b></div>
+      <div><span>Brainstorming, creative writing</span><b>0.8 – 1.2</b></div>
+      <div><span>Production systems</span><b>≤ ~1.2</b></div>
+    </div>
+    <p class="lead">Start with the <strong>provider default</strong>. Change it only with a reason, and test.</p>
+    <p class="foot">GenAI #5 · Sampling parameters</p>
+  </section>
+
+  <!-- 7 -->
+  <section class="slide light" aria-label="Top-p">
+    <h2>Top-p = 0.9: keep the likely few</h2>
+    <div class="split">
+      <figure style="margin:0">
+        <div class="tp" role="list">
+          <div class="keep" role="listitem" title="pistachio 70.9% (kept)" style="height:100%"><span>70.9%</span></div>
+          <div class="keep" role="listitem" title="strawberry 10.7% (kept)" style="height:15.1%"><span>10.7%</span></div>
+          <div class="keep" role="listitem" title="raspberry 5.3% (kept)" style="height:7.5%"><span>5.3%</span></div>
+          <div class="keep" role="listitem" title="salted 3.4% (kept)" style="height:4.8%"><span>3.4%</span></div>
+          <div role="listitem" title="chocolate 3.3% (dropped)" style="height:4.7%"><span>3.3%</span></div>
+          <div role="listitem" title="a 1.5% (dropped)" style="height:2.1%"><span>1.5%</span></div>
+          <div role="listitem" title="lavender 1.4% (dropped)" style="height:2%"><span>1.4%</span></div>
+          <div role="listitem" title="vanilla 1.4% (dropped)" style="height:2%"><span>1.4%</span></div>
+        </div>
+        <div class="tpl" aria-hidden="true"><span class="keep">pistachio</span><span class="keep">strawberry</span><span class="keep">raspberry</span><span class="keep">salted</span><span>chocolate</span><span>a</span><span>lavender</span><span>vanilla</span></div>
+      </figure>
+      <ul class="points">
+        <li><b>Top-p</b>: keep tokens until their odds add up to p. Here, 4 tokens = 90.3%.</li>
+        <li><b>Top-k</b>: keep a fixed number, e.g. 40.</li>
+        <li>Dropped tokens can <b>never</b> be picked.</li>
+        <li>Tune <b>temperature or top-p, not both</b>.</li>
+      </ul>
+    </div>
+    <p class="foot">Real odds at T = 1.0 from temperature_dial.py</p>
+  </section>
+
+  <!-- 8 -->
+  <section class="slide dark" aria-label="How an answer ends">
+    <h2>Three ways an answer ends</h2>
+    <div class="ends">
+      <div><b>Natural end</b><code>…plants turn light into food.</code><i>stop</i></div>
+      <div class="hot"><b>Max tokens</b><code>…plants and some other ✂</code><i>length</i></div>
+      <div><b>Stop sequence</b><code>1. Apple  2. Banana</code><i>stop</i></div>
+    </div>
+    <p class="lead"><strong>Always check the finish reason.</strong> “length” / “max_tokens” means the answer is <span class="accent">incomplete</span>.</p>
+    <p class="foot">Max tokens and stop rows: real output from max_tokens_and_stop.py · natural end is illustrative</p>
+  </section>
+
+  <!-- 9 -->
+  <section class="slide dark" aria-label="Thinking eats the budget">
+    <p class="eyebrow">Gotcha · reasoning models</p>
+    <h2>Thinking eats your token limit</h2>
+    <div class="legend"><span><i style="background:#5F86CC"></i>hidden thinking</span><span><i style="background:#D9782B"></i>visible answer</span></div>
+    <div class="stk" role="list">
+      <div class="row2" role="listitem" title="limit 50: 44 thinking + 2 answer, cut off"><span class="lim">limit 50</span><span class="bar"><span class="th" style="width:6.6%"></span><span class="an" style="width:.3%"></span></span><span class="res">MAX_TOKENS → <b>'Brew'</b></span></div>
+      <div class="row2" role="listitem" title="limit 300: 289 thinking + 7 answer, cut off"><span class="lim">limit 300</span><span class="bar"><span class="th" style="width:43.3%"></span><span class="an" style="width:1%"></span></span><span class="res">MAX_TOKENS → cut off</span></div>
+      <div class="row2" role="listitem" title="limit 2000: 652 thinking + 8 answer, finished"><span class="lim">limit 2000</span><span class="bar"><span class="th" style="width:97.6%"></span><span class="an" style="width:1.2%"></span></span><span class="res">STOP → finished</span></div>
+    </div>
+    <p class="lead">A one-line slogan needed <strong>~660 tokens</strong> of budget. Leave plenty of headroom.</p>
+    <p class="foot">Real output from gemini_gotchas.py · gemini-3.8-flash</p>
+  </section>
+
+  <!-- 10 -->
+  <section class="slide light" aria-label="Seeds and determinism">
+    <h2>Temperature 0 ≠ identical answers</h2>
+    <div class="row cols-2">
+      <div class="runs">
+        <h3>Gemini, temperature 0</h3>
+        <p><b>1</b>Where every cup feels like coming home.</p>
+        <p><b>2</b>Where every great day begins with the perfect cup.</p>
+        <p><b>3</b>Crafted with passion, brewed with care…</p>
+      </div>
+      <div class="runs">
+        <h3>Ollama, temperature 1.0, seed 42</h3>
+        <p><b>1</b>Your daily dose of delicious.</p>
+        <p><b>2</b>Your daily dose of delicious.</p>
+        <p style="background:transparent;border:0;color:var(--slate);font-size:1.2em">A <strong>seed</strong> repeats the dice rolls, where the API supports it.</p>
+      </div>
+    </div>
+    <p class="lead">Cloud models batch requests across many servers. <span class="accent">Design for variation</span>: validate and retry.</p>
+    <p class="foot">Real output from gemini_gotchas.py and side_by_side.py</p>
+  </section>
+
+  <!-- 11 -->
+  <section class="slide dark" aria-label="The same knobs across providers">
+    <h2>The same knobs, different names</h2>
+    <div class="scroll-x">
+      <table class="knobs">
+        <thead><tr><th scope="col">Knob</th><th scope="col">OpenAI</th><th scope="col">Claude</th><th scope="col">Gemini</th><th scope="col">Ollama</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">Temperature</th><td>temperature</td><td>temperature</td><td>temperature</td><td>temperature</td></tr>
+          <tr><th scope="row">Top-p / top-k</th><td>top_p</td><td>top_p, top_k</td><td>top_p, top_k</td><td>top_p, top_k</td></tr>
+          <tr><th scope="row">Max tokens</th><td>max_output_tokens</td><td>max_tokens (required)</td><td>max_output_tokens</td><td>num_predict</td></tr>
+          <tr><th scope="row">Stop</th><td>stop (Chat)</td><td>stop_sequences</td><td>stop_sequences</td><td>stop</td></tr>
+          <tr><th scope="row">Seed</th><td>seed (Chat)</td><td class="no">—</td><td>seed</td><td>seed</td></tr>
+          <tr><th scope="row">Why it stopped</th><td>finish_reason</td><td>stop_reason</td><td>finish_reason</td><td>done_reason</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="foot">Names change between API versions · reasoning models may restrict these knobs: check the docs</p>
+  </section>
+
+  <!-- 12 -->
+  <section class="slide dark s-interview" aria-label="Interview question">
+    <p class="eyebrow">Interview question · FDE</p>
+    <blockquote>“A customer's extraction pipeline returns slightly different JSON every run, and sometimes cuts off halfway. What do you check?”</blockquote>
+    <div class="answer">
+      <p class="label">A strong answer</p>
+      <p>Two problems. Cut-off JSON: check the <b>finish reason</b>. If it's the length limit, raise it, and remember thinking counts. Variation: lower temperature, leave top-p alone, but don't rely on zero being deterministic. Use <b>structured outputs</b>, validate every response, retry on failure, and use a seed for repeatable tests.</p>
+    </div>
+    <p class="foot">Pause the video and say it in your own words.</p>
+  </section>
+
+  <!-- 13 -->
+  <section class="slide orange s-next" aria-label="Up next">
+    <p class="eyebrow">Up next · Episode 06</p>
+    <h2>The model landscape</h2>
+    <div class="pills"><span>Closed vs open-weight</span><span>Model families</span><span>Choosing for a use case</span></div>
+    <p class="msg">Run the four demos: <a href="https://github.com/Amitpnk/genai-zero-to-production/tree/main/ep05-sampling-parameters">dial, side by side, stop, gotchas</a>.</p>
+    <p class="foot">GenAI #5 · Sampling parameters</p>
+  </section>
+
+</main>
+
+<p class="present-hint">← → to move · Esc to exit</p>
+<script src="../assets/deck.js"></script>
+</body>
+</html>

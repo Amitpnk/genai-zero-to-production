@@ -199,7 +199,7 @@ Practise it: say it out loud in your own words before moving on.
 
 ## Next up
 
-**Episode 05: Sampling parameters.** Temperature, top-p, max tokens and stop sequences, with live side-by-side outputs.
+**[Episode 05: Sampling parameters](../ep05-sampling-parameters/).** Temperature, top-p, max tokens and stop sequences, with live side-by-side outputs.
 
 ---
 
