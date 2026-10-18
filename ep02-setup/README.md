@@ -1,16 +1,17 @@
 # Episode 02: Dev Environment Setup
 
-Python, uv, VS Code, API keys for Anthropic, OpenAI and AWS Bedrock, and how to never leak them.
+Python, uv, VS Code, API keys for Anthropic, OpenAI, Google Gemini and AWS Bedrock, and how to never leak them.
 
 ## What you'll have at the end
 
-One Python project that calls **Anthropic**, **OpenAI** and **AWS Bedrock**, with every key stored safely in `.env`. You're done when three smoke-test scripts each print a reply.
+One Python project that calls **Anthropic**, **OpenAI**, **Google Gemini** and **AWS Bedrock**, with every key stored safely in `.env`. You're done when four smoke-test scripts each print a reply.
 
 ## Before you start
 
 - A laptop running Windows, macOS or Linux
 - A [GitHub](https://github.com) account
 - A payment card for API billing (all providers are pay-as-you-go)
+- A Google account (for Gemini)
 - An [AWS account](https://aws.amazon.com) (for Bedrock)
 
 > Already have some of this? Skip ahead, but **don't skip Step 6** (`.env` hygiene).
@@ -23,9 +24,9 @@ One Python project that calls **Anthropic**, **OpenAI** and **AWS Bedrock**, wit
 | 2 | Install uv | `uv --version` works |
 | 3 | Get the code | `uv sync` finishes without errors |
 | 4 | Set up VS Code | Status bar shows `.venv` |
-| 5 | Get API keys | You have two keys and an AWS profile |
+| 5 | Get API keys | You have three keys and an AWS profile |
 | 6 | Create `.env` | `.env` exists with real values and Git ignores it |
-| 7 | Run smoke tests | All three scripts print a reply |
+| 7 | Run smoke tests | All four scripts print a reply |
 
 ---
 
@@ -88,7 +89,7 @@ uv sync
 ```bash
 uv init genai-engineering --python 3.12
 cd genai-engineering
-uv add anthropic openai boto3 python-dotenv
+uv add anthropic openai google-genai boto3 python-dotenv
 uv run python --version
 ```
 
@@ -102,7 +103,7 @@ This creates `.venv`, `pyproject.toml` and `uv.lock`.
 ```bash
 python -m venv .venv
 source .venv/bin/activate          # Windows: .venv\Scripts\activate
-pip install anthropic openai boto3 python-dotenv
+pip install anthropic openai google-genai boto3 python-dotenv
 ```
 
 With venv, run scripts with `python ...` instead of `uv run python ...`.
@@ -138,12 +139,13 @@ Format on save with Ruff is already turned on in `.vscode/settings.json`.
 
 ## Step 5: Get your API keys
 
-Three providers, three ways to sign in:
+Four providers, two ways to sign in:
 
 | Provider | How you sign in | Variable in `.env` |
 | --- | --- | --- |
 | Anthropic | API key from the Console | `ANTHROPIC_API_KEY` |
 | OpenAI | API key from the Platform | `OPENAI_API_KEY` |
+| Google Gemini | API key from Google AI Studio | `GEMINI_API_KEY` |
 | AWS Bedrock | Your AWS identity (no single key) | `AWS_PROFILE` |
 
 > 💰 **Set a spending limit on every account today.** The experiments are small, but limits protect you if a key ever leaks.
@@ -164,7 +166,15 @@ Three providers, three ways to sign in:
 4. Set a budget under your organization's limits.
 5. Note the model ID you want to use from the [OpenAI models page](https://platform.openai.com/docs/models).
 
-### 5c. AWS Bedrock (three steps)
+### 5c. Google Gemini
+
+1. Sign in at [aistudio.google.com](https://aistudio.google.com) with your Google account.
+2. Click **Get API key → Create API key**. Pick (or create) a Google Cloud project for this course.
+3. Copy the key once and keep it safe.
+4. The free tier has rate limits. If you turn on billing for the project, set a **budget alert** in Google Cloud Billing. Note that a budget alert emails you; it doesn't stop spending.
+5. Note the model ID you want from the [Gemini models page](https://ai.google.dev/gemini-api/docs/models).
+
+### 5d. AWS Bedrock (three steps)
 
 Bedrock has no single API key. You sign in with your AWS identity.
 
@@ -208,6 +218,8 @@ ANTHROPIC_API_KEY=your-anthropic-key
 ANTHROPIC_MODEL=model-id-from-anthropic-docs
 OPENAI_API_KEY=your-openai-key
 OPENAI_MODEL=model-id-from-openai-docs
+GEMINI_API_KEY=your-gemini-key
+GEMINI_MODEL=model-id-from-gemini-docs
 AWS_PROFILE=genai-course
 AWS_REGION=us-east-1
 BEDROCK_MODEL_ID=model-id-from-bedrock-catalog
@@ -228,7 +240,7 @@ git status          # .env must NOT appear in the list
 git check-ignore .env   # should print: .env
 ```
 
-The Anthropic and OpenAI SDKs read their keys from the environment automatically, and boto3 picks up `AWS_PROFILE`. Your code never touches the secret directly.
+The Anthropic, OpenAI and Gemini SDKs read their keys from the environment automatically, and boto3 picks up `AWS_PROFILE`. Your code never touches the secret directly.
 
 ## Step 7: Run the smoke tests
 
@@ -237,6 +249,7 @@ Each script sends one small prompt and prints the reply. Run them from the **rep
 ```bash
 uv run python ep02-setup/hello_anthropic.py
 uv run python ep02-setup/hello_openai.py
+uv run python ep02-setup/hello_gemini.py
 uv run python ep02-setup/hello_bedrock.py
 ```
 
@@ -246,12 +259,13 @@ If you're using SSO for AWS and your session has expired, sign in again first:
 aws sso login --profile genai-course
 ```
 
-✅ **Done when:** three providers give three replies, with zero secrets in code. 🎉
+✅ **Done when:** four providers give four replies, with zero secrets in code. 🎉
 
 | File | Provider | API used |
 | --- | --- | --- |
 | [`hello_anthropic.py`](hello_anthropic.py) | Anthropic | Messages API |
 | [`hello_openai.py`](hello_openai.py) | OpenAI | Responses API |
+| [`hello_gemini.py`](hello_gemini.py) | Google Gemini | `generate_content` (google-genai SDK) |
 | [`hello_bedrock.py`](hello_bedrock.py) | AWS Bedrock | Converse API (same request shape for every Bedrock model) |
 
 ### If it fails
@@ -259,6 +273,8 @@ aws sso login --profile genai-course
 | Error | Likely cause | Fix |
 | --- | --- | --- |
 | `401` / `authentication_error` | Wrong or missing key | Check the key in `.env` |
+| `400 API key not valid` (Gemini) | Wrong key, or an old `GOOGLE_API_KEY` is also set (it takes priority) | Check `GEMINI_API_KEY` in `.env` and unset `GOOGLE_API_KEY` |
+| `429 RESOURCE_EXHAUSTED` (Gemini) | Free-tier rate limit hit | Wait a minute, or enable billing on the project |
 | `AccessDeniedException` (Bedrock) | No model access or IAM permission | Request model access in your region, or check IAM |
 | `KeyError: 'ANTHROPIC_MODEL'` (etc.) | Variable missing from `.env` | Add it, copying the name from `.env.example` |
 | `ModuleNotFoundError` | Not running inside the project env | Use `uv run ...`, or run `uv sync` again |
@@ -287,9 +303,9 @@ Answer in this order:
 - [ ] `uv --version` works
 - [ ] Repo cloned and `uv sync` succeeded
 - [ ] VS Code shows `.venv` as the interpreter
-- [ ] Spend limits set on Anthropic, OpenAI and AWS
+- [ ] Spend limits or budget alerts set on Anthropic, OpenAI, Google Cloud and AWS
 - [ ] `.env` created from `.env.example`, and `git status` doesn't show it
-- [ ] All three smoke tests print a reply
+- [ ] All four smoke tests print a reply
 
 ## Staying up to date
 
