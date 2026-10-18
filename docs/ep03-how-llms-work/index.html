@@ -1,0 +1,515 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ep 03 · How LLMs Actually Work · GenAI Zero to Production</title>
+<meta name="description" content="Slides for GenAI Engineering Episode 3: how LLMs work, intuitively. Tokens, embeddings, attention and next-token prediction without heavy maths.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/deck.css">
+<style>
+  /* Title + statements (same as earlier episodes) */
+  .s-title { display: flex; flex-direction: column; justify-content: center; }
+  .s-title .big-num { position: absolute; right: .3em; top: .05em; font: 700 20em/1 var(--head); color: #1A2840; letter-spacing: -.04em; }
+  .s-title h1 { position: relative; font-size: 7.4em; font-weight: 500; line-height: .98; letter-spacing: -.02em; margin-bottom: .45em; }
+  .s-title .sub { position: relative; font-size: 1.75em; line-height: 1.45; color: var(--mist); max-width: 32em; }
+  .s-title .byline { display: flex; align-items: center; gap: 1em; margin-top: 2.6em; font-size: 1.15em; letter-spacing: .06em; color: var(--mist); }
+  .s-title .byline::before { content: ""; width: 3.3em; height: 2px; background: var(--orange); }
+  .s-statement { display: flex; flex-direction: column; justify-content: center; }
+  .s-statement .big { font: 700 4.6em/1.12 var(--head); letter-spacing: -.02em; max-width: 14em; margin-bottom: .55em; }
+  .s-statement .lead { font-size: 2.2em; max-width: 26em; margin-top: 0; }
+
+  /* Diagrams */
+  .diagram { width: 100%; height: auto; display: block; }
+  .diagram text { font-family: var(--body); }
+  .diagram .h { font-family: var(--head); font-weight: 700; }
+  .diagram .m { font-family: var(--mono); }
+
+  /* Two-column slides */
+  .split { display: grid; grid-template-columns: 1.25fr 1fr; gap: 3em; align-items: center; }
+  .split.rev { grid-template-columns: 1fr 1.25fr; }
+  .points { margin: 0; padding: 0; list-style: none; display: grid; gap: 1.1em; }
+  .points li { font-size: 1.5em; line-height: 1.45; padding-left: 1.3em; position: relative; color: var(--slate); }
+  .dark .points li { color: var(--mist); }
+  .points li::before { content: ""; position: absolute; left: 0; top: .55em; width: .5em; height: .5em; border-radius: 50%; background: var(--rust); }
+  .dark .points li::before { background: var(--orange); }
+  .points b { color: var(--ink); }
+  .dark .points b { color: var(--cream); }
+
+  /* Token chips */
+  .tok-rows { display: grid; gap: 1.5em; }
+  .tok-row .src { font-size: 1.25em; color: var(--slate); margin-bottom: .5em; }
+  .tok-row .src b { color: var(--ink); font-weight: 600; }
+  .chips { display: flex; flex-wrap: wrap; gap: .35em; }
+  .chip { display: inline-flex; flex-direction: column; align-items: center; border-radius: .35em; padding: .45em .7em .35em; font-family: var(--mono); font-size: 1.35em; line-height: 1.2; white-space: pre; }
+  .chip small { font-size: .62em; opacity: .7; margin-top: .2em; }
+  .c1 { background: #F8DCC0; } .c2 { background: #D8E4F8; } .c3 { background: #DDEBD3; } .c4 { background: #EEDDF0; } .c5 { background: #F5E7B5; } .c6 { background: #E3E0D9; }
+  .rule { background: var(--ink); color: var(--cream); border-radius: .75em; padding: 2em; }
+  .rule .eq { font: 700 2.4em/1.25 var(--head); margin-bottom: .5em; }
+  .rule .eq span { color: var(--orange); }
+  .rule p { font-size: 1.3em; line-height: 1.55; color: var(--mist); }
+
+  /* Bar chart (next-token) */
+  .bars { display: grid; gap: 1.1em; margin-top: .6em; }
+  .bar { display: grid; grid-template-columns: 7.5em 1fr 4.2em; align-items: center; gap: .9em; font-size: 1.5em; }
+  .bar .tok { font-family: var(--mono); text-align: right; color: var(--cream); white-space: pre; }
+  .bar .track { height: 1.35em; position: relative; }
+  .bar .fill { position: absolute; left: 0; top: 0; bottom: 0; background: #5B6B85; border-radius: 0 4px 4px 0; }
+  .bar.pick .fill { background: var(--orange); }
+  .bar .val { color: var(--mist); font-variant-numeric: tabular-nums; }
+  .bar.pick .val { color: var(--cream); font-weight: 600; }
+  .bar:hover .fill { filter: brightness(1.15); }
+  .chart-title { font-size: 1.2em; color: var(--mist); margin-bottom: 1.4em; }
+  .chart-title b { color: var(--cream); font-family: var(--mono); font-weight: 500; }
+  .loop-card { background: var(--ink-2); border: 1px solid var(--line-dark); border-radius: .75em; padding: 1.8em; }
+  .loop-card ol { margin: 0; padding-left: 1.3em; font-size: 1.4em; line-height: 1.9; color: var(--mist); }
+  .loop-card ol b { color: var(--cream); }
+  .grow { margin-top: 2.2em; font-family: var(--mono); font-size: 1.1em; line-height: 1.9; color: var(--mist); }
+  .grow span { color: var(--orange); }
+
+  /* Bank slide */
+  .bank { display: grid; grid-template-columns: 1fr 1fr; gap: 1.6em; margin-bottom: 1.6em; }
+  .bank .card p.q { font: 500 1.9em/1.35 var(--head); color: var(--ink); margin-bottom: .8em; }
+  .bank .card p.q mark { background: #F8DCC0; color: var(--ink); padding: 0 .15em; border-radius: .15em; }
+
+  /* QKV */
+  .qkv .card .label { font-family: var(--mono); font-size: 1.3em; }
+  .qkv .card h3 { font-size: 1.8em; }
+
+  /* Training flow */
+  .flow { display: grid; grid-template-columns: repeat(4, 1fr); gap: 2.6em; }
+  .flow .card { position: relative; padding: 1.5em 1.4em; }
+  .flow .card:not(:last-child)::after { content: "→"; position: absolute; right: -1.45em; top: 50%; transform: translateY(-50%); color: var(--rust); font-size: 1.5em; }
+  .flow .card h3 { font-size: 1.45em; }
+  .flow .card p { font-size: 1.15em; }
+  .warn { margin-top: 2em; display: flex; gap: 1.2em; align-items: flex-start; background: var(--ink); color: var(--cream); border-radius: .75em; padding: 1.6em 1.8em; }
+  .warn svg { width: 2.2em; height: 2.2em; color: var(--orange); flex: none; }
+  .warn p { font-size: 1.45em; line-height: 1.5; color: var(--mist); }
+  .warn b { color: var(--cream); }
+
+  /* Implications */
+  .imp { display: grid; gap: .7em; }
+  .imp div { display: grid; grid-template-columns: 1fr auto 1.25fr; gap: 1.2em; align-items: center; background: var(--ink-2); border-radius: .5em; padding: 1em 1.5em; font-size: 1.45em; }
+  .imp i { font-style: normal; color: var(--mist); }
+  .imp span { color: var(--orange); }
+
+  /* Interview + next */
+  .s-interview blockquote { margin: 0 0 1.1em; font: 500 3.1em/1.2 var(--head); letter-spacing: -.02em; max-width: 19em; }
+  .answer { background: var(--ink-2); border-left: 3px solid var(--orange); border-radius: .4em; padding: 1.6em 1.8em; }
+  .answer .label { font-size: 1em; color: var(--mist); margin-bottom: .7em; }
+  .answer p { font-size: 1.4em; line-height: 1.6; }
+  .s-next { display: flex; flex-direction: column; justify-content: center; }
+  .s-next h2 { font-size: 4.6em; margin-bottom: .45em; }
+  .pills { display: flex; gap: 1em; flex-wrap: wrap; margin-bottom: 2em; }
+  .pills span { background: var(--cream); border-radius: 999px; padding: .6em 1.6em; font-size: 1.6em; }
+  .s-next .msg { font-size: 1.6em; }
+  .s-next .msg a { color: var(--ink); }
+
+  @media (max-width: 720px) {
+    .s-title .big-num { display: none; }
+    .s-title h1 { font-size: 5em; }
+    .s-statement .big { font-size: 3.2em; }
+    .split, .split.rev, .bank, .flow { grid-template-columns: 1fr; gap: 1.6em; }
+    .flow .card:not(:last-child)::after { content: "↓"; right: auto; left: 50%; top: auto; bottom: -1.35em; transform: translateX(-50%); }
+    .imp div { grid-template-columns: 1fr; gap: .2em; }
+    .imp span.arrow { display: none; }
+    .bar { grid-template-columns: 6em 1fr 3.8em; }
+    .s-interview blockquote { font-size: 2.5em; }
+    .s-next h2 { font-size: 3.4em; }
+    .scroll-x { overflow-x: auto; }
+    .scroll-x .diagram { min-width: 52em; }
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="../">GenAI <span>Zero to Production</span></a>
+  <nav aria-label="Episode">
+    <a href="https://github.com/Amitpnk/genai-zero-to-production/tree/main/ep03-how-llms-work">Episode notes</a>
+    <a href="https://github.com/Amitpnk/genai-zero-to-production">GitHub repo</a>
+    <button class="btn" type="button" data-present>Present (P)</button>
+  </nav>
+</header>
+
+<main class="deck" aria-label="Episode 3 slides">
+
+  <!-- 1 -->
+  <section class="slide dark s-title" aria-label="Title">
+    <div class="big-num" aria-hidden="true">03</div>
+    <p class="eyebrow">GenAI Engineering · Episode 03</p>
+    <h1>How LLMs actually<br>work, intuitively</h1>
+    <p class="sub">Tokens, embeddings, attention and next-token prediction, without the heavy maths.</p>
+    <p class="byline">Amit · Generative AI &amp; Agentic AI Instructor</p>
+  </section>
+
+  <!-- 2 -->
+  <section class="slide light s-statement" aria-label="The big idea">
+    <p class="eyebrow">The big idea</p>
+    <p class="big">An LLM does one thing: predict the next token.</p>
+    <p class="lead">Everything else, every chat reply, summary and line of code, is <span class="accent">that one step in a loop</span>.</p>
+    <p class="foot">GenAI #3 · How LLMs work</p>
+  </section>
+
+  <!-- 3 -->
+  <section class="slide dark" aria-label="The whole picture">
+    <h2>The whole picture</h2>
+    <div class="scroll-x">
+      <svg class="diagram" viewBox="0 0 1386 470" role="img" aria-labelledby="pipe-t">
+        <title id="pipe-t">Pipeline: your text goes to the tokenizer, then embeddings, then transformer layers, then next-token probabilities; one token is picked, appended, and the loop repeats.</title>
+        <defs>
+          <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#B9C2D0"/></marker>
+          <marker id="ah-o" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#F2994A"/></marker>
+        </defs>
+        <g font-size="19">
+          <!-- boxes: x = 0, 289, 578, 867, 1156 ; w = 230 -->
+          <g>
+            <rect x="0" y="40" width="230" height="230" rx="14" fill="#16233A" stroke="#2A3B57"/>
+            <text x="24" y="82" fill="#7AA7F0" font-size="16" class="m">your text</text>
+            <text x="24" y="122" fill="#F5F2EA" class="h" font-size="24">Prompt</text>
+            <text x="24" y="168" fill="#B9C2D0">“The capital of</text>
+            <text x="24" y="194" fill="#B9C2D0">France is”</text>
+          </g>
+          <g>
+            <rect x="289" y="40" width="230" height="230" rx="14" fill="#16233A" stroke="#2A3B57"/>
+            <text x="313" y="82" fill="#F2994A" font-size="16" class="m">1 · tokenizer</text>
+            <text x="313" y="122" fill="#F5F2EA" class="h" font-size="24">Tokens</text>
+            <text x="313" y="168" fill="#B9C2D0" class="m" font-size="16">The| capital| of|</text>
+            <text x="313" y="192" fill="#B9C2D0" class="m" font-size="16"> France| is</text>
+            <text x="313" y="232" fill="#7AA7F0" class="m" font-size="14">976 9029 328 10128 382</text>
+          </g>
+          <g>
+            <rect x="578" y="40" width="230" height="230" rx="14" fill="#16233A" stroke="#2A3B57"/>
+            <text x="602" y="82" fill="#F2994A" font-size="16" class="m">2 · embeddings</text>
+            <text x="602" y="122" fill="#F5F2EA" class="h" font-size="24">Vectors</text>
+            <text x="602" y="168" fill="#B9C2D0">numbers that</text>
+            <text x="602" y="194" fill="#B9C2D0">capture meaning</text>
+            <text x="602" y="232" fill="#7AA7F0" class="m" font-size="14">[0.02, −0.07, …]</text>
+          </g>
+          <g>
+            <rect x="867" y="40" width="230" height="230" rx="14" fill="#16233A" stroke="#2A3B57"/>
+            <text x="891" y="82" fill="#F2994A" font-size="16" class="m">3 · transformer</text>
+            <text x="891" y="122" fill="#F5F2EA" class="h" font-size="24">Attention</text>
+            <text x="891" y="168" fill="#B9C2D0">+ feed-forward,</text>
+            <text x="891" y="194" fill="#B9C2D0">× dozens of layers</text>
+            <!-- stacked layers icon -->
+            <rect x="891" y="216" width="120" height="10" rx="3" fill="#2A3B57"/>
+            <rect x="891" y="230" width="120" height="10" rx="3" fill="#2A3B57"/>
+            <rect x="891" y="244" width="120" height="10" rx="3" fill="#2A3B57"/>
+          </g>
+          <g>
+            <rect x="1156" y="40" width="230" height="230" rx="14" fill="#16233A" stroke="#F2994A" stroke-width="2"/>
+            <text x="1180" y="82" fill="#F2994A" font-size="16" class="m">4 · output</text>
+            <text x="1180" y="122" fill="#F5F2EA" class="h" font-size="24">Next token</text>
+            <text x="1180" y="168" fill="#F5F2EA" class="m" font-size="16">' Paris'  44%</text>
+            <text x="1180" y="194" fill="#B9C2D0" class="m" font-size="16">'?'        6%</text>
+            <text x="1180" y="220" fill="#B9C2D0" class="m" font-size="16">':'        4%</text>
+            <text x="1180" y="246" fill="#B9C2D0" class="m" font-size="16">…</text>
+          </g>
+          <!-- forward arrows -->
+          <g stroke="#B9C2D0" stroke-width="2" marker-end="url(#ah)">
+            <line x1="236" y1="155" x2="282" y2="155"/>
+            <line x1="525" y1="155" x2="571" y2="155"/>
+            <line x1="814" y1="155" x2="860" y2="155"/>
+            <line x1="1103" y1="155" x2="1149" y2="155"/>
+          </g>
+          <!-- loop back -->
+          <path d="M1271,276 V360 Q1271,380 1251,380 H135 Q115,380 115,360 V284" fill="none" stroke="#F2994A" stroke-width="2.5" stroke-dasharray="8 7" marker-end="url(#ah-o)"/>
+          <rect x="455" y="362" width="476" height="38" rx="19" fill="#0E1726"/>
+          <text x="693" y="388" fill="#F2994A" text-anchor="middle" font-size="20" font-weight="600">pick one token · append it · repeat</text>
+        </g>
+      </svg>
+    </div>
+    <p class="foot">This loop is called autoregressive generation.</p>
+  </section>
+
+  <!-- 4 -->
+  <section class="slide light" aria-label="Step 1: tokens">
+    <p class="eyebrow">Step 1 · Tokens</p>
+    <div class="split">
+      <div class="tok-rows">
+        <div class="tok-row">
+          <p class="src"><b>Hello world</b> → 2 tokens</p>
+          <div class="chips"><span class="chip c1">Hello<small>13225</small></span><span class="chip c2"> world<small>2375</small></span></div>
+        </div>
+        <div class="tok-row">
+          <p class="src"><b>unbelievable</b> → 3 tokens</p>
+          <div class="chips"><span class="chip c1">un<small>373</small></span><span class="chip c2">bel<small>9880</small></span><span class="chip c3">ievable<small>45794</small></span></div>
+        </div>
+        <div class="tok-row">
+          <p class="src"><b>GenAI engineering is fun!</b> → 6 tokens</p>
+          <div class="chips"><span class="chip c1">Gen<small>11757</small></span><span class="chip c2">AI<small>17527</small></span><span class="chip c3"> engineering<small>16411</small></span><span class="chip c4"> is<small>382</small></span><span class="chip c5"> fun<small>2827</small></span><span class="chip c6">!<small>0</small></span></div>
+        </div>
+        <div class="tok-row">
+          <p class="src"><b>नमस्ते दुनिया</b> (“Hello world” in Hindi) → 5 tokens</p>
+          <div class="chips"><span class="chip c1">न<small>998</small></span><span class="chip c2">म<small>1637</small></span><span class="chip c3">स्त<small>14681</small></span><span class="chip c4">े<small>628</small></span><span class="chip c5"> दुनिया<small>64593</small></span></div>
+        </div>
+      </div>
+      <div class="rule">
+        <p class="eq">1 token ≈ <span>4 characters</span><br>≈ ¾ of a word</p>
+        <p>Rule of thumb for English. Common words are one token, rare words split into pieces, and the space belongs to the token. Each model family has its own tokenizer.</p>
+      </div>
+    </div>
+    <p class="foot">Real output from tokens.py · o200k_base tokenizer</p>
+  </section>
+
+  <!-- 5 -->
+  <section class="slide dark" aria-label="Why tokens matter">
+    <h2>Why tokens matter to you</h2>
+    <div class="row cols-3">
+      <div class="card">
+        <p class="label">Cost</p>
+        <h3>You pay per token</h3>
+        <p>Input and output are both billed in tokens, not words or requests.</p>
+      </div>
+      <div class="card">
+        <p class="label">Limits</p>
+        <h3>Context is counted in tokens</h3>
+        <p>Long documents might not fit. That's Episode 4.</p>
+      </div>
+      <div class="card hl">
+        <p class="label">Quirks</p>
+        <h3>It never sees letters</h3>
+        <p>That's why counting the r's in “strawberry” is hard, and why Hindi costs more tokens than English.</p>
+      </div>
+    </div>
+    <p class="foot">GenAI #3 · How LLMs work</p>
+  </section>
+
+  <!-- 6 -->
+  <section class="slide light" aria-label="Step 2: embeddings">
+    <p class="eyebrow">Step 2 · Embeddings</p>
+    <div class="split rev">
+      <ul class="points">
+        <li>Each token becomes a <b>long list of numbers</b>: 3,072 of them in <code>gemini-embedding-001</code>.</li>
+        <li>That list is a position on a <b>map of meaning</b>. Similar meanings land close together.</li>
+        <li><b>Directions mean something too</b>: man → king points the same way as woman → queen.</li>
+        <li>Position in the sentence is added, so “dog bites man” ≠ “man bites dog”.</li>
+      </ul>
+      <svg class="diagram" viewBox="0 0 760 520" role="img" aria-labelledby="map-t">
+        <title id="map-t">An illustrative 2D map of meaning: animals (cat, kitten, dog) cluster together, food (apple, banana) clusters together, laptop sits apart, and the arrow from man to king is parallel to the arrow from woman to queen.</title>
+        <defs><marker id="ah-r" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#A4500C"/></marker></defs>
+        <rect x="1" y="1" width="758" height="518" rx="16" fill="#FBFAF6" stroke="#E3DED3"/>
+        <g font-size="22" fill="#0E1726">
+          <!-- clusters -->
+          <ellipse cx="170" cy="380" rx="135" ry="88" fill="#D8E4F8" opacity=".55"/>
+          <text x="80" y="300" font-size="15" fill="#4A5568" letter-spacing="2">ANIMALS</text>
+          <circle cx="120" cy="370" r="7"/><text x="134" y="377">cat</text>
+          <circle cx="175" cy="420" r="7"/><text x="189" y="427">kitten</text>
+          <circle cx="215" cy="350" r="7"/><text x="229" y="357">dog</text>
+
+          <ellipse cx="560" cy="400" rx="110" ry="70" fill="#DDEBD3" opacity=".7"/>
+          <text x="490" y="340" font-size="15" fill="#4A5568" letter-spacing="2">FOOD</text>
+          <circle cx="520" cy="410" r="7"/><text x="534" y="417">apple</text>
+          <circle cx="595" cy="380" r="7"/><text x="609" y="387">banana</text>
+
+          <circle cx="660" cy="250" r="7"/><text x="674" y="257">laptop</text>
+
+          <!-- people with parallel arrows -->
+          <circle cx="250" cy="200" r="7"/><text x="210" y="232">man</text>
+          <circle cx="430" cy="220" r="7"/><text x="444" y="249">woman</text>
+          <circle cx="300" cy="80" r="7"/><text x="230" y="70">king</text>
+          <circle cx="480" cy="100" r="7"/><text x="494" y="92">queen</text>
+          <line x1="254" y1="190" x2="296" y2="92" stroke="#A4500C" stroke-width="3" marker-end="url(#ah-r)"/>
+          <line x1="434" y1="210" x2="476" y2="112" stroke="#A4500C" stroke-width="3" marker-end="url(#ah-r)"/>
+          <text x="314" y="160" font-size="16" fill="#A4500C">same direction:</text>
+          <text x="314" y="180" font-size="16" fill="#A4500C">“royalty”</text>
+        </g>
+        <text x="24" y="500" font-size="14" fill="#4A5568">Illustrative 2D sketch: the real map has thousands of dimensions</text>
+      </svg>
+    </div>
+    <p class="foot">GenAI #3 · How LLMs work</p>
+  </section>
+
+  <!-- 7 -->
+  <section class="slide dark" aria-label="Embeddings demo">
+    <h2>Embeddings, measured</h2>
+    <div class="split">
+      <figure style="margin:0">
+        <p class="chart-title">Similarity to <b>“cat”</b> · cosine similarity, gemini-embedding-001</p>
+        <svg class="diagram" viewBox="0 0 760 440" role="img" aria-labelledby="sim-t">
+          <title id="sim-t">Cosine similarity to cat: dog 0.747, kitten 0.730, man 0.661, woman 0.658, laptop 0.647, banana 0.645, queen 0.637, apple 0.630, king 0.629.</title>
+          <!-- axis 0.60 .. 0.76 mapped to x 120 .. 740 -->
+          <g font-size="17" fill="#B9C2D0">
+            <g stroke="#2A3B57" stroke-width="1">
+              <line x1="120" y1="10" x2="120" y2="400"/><line x1="275" y1="10" x2="275" y2="400"/><line x1="430" y1="10" x2="430" y2="400"/><line x1="585" y1="10" x2="585" y2="400"/><line x1="740" y1="10" x2="740" y2="400"/>
+            </g>
+            <text x="120" y="428" text-anchor="middle">0.60</text><text x="275" y="428" text-anchor="middle">0.64</text><text x="430" y="428" text-anchor="middle">0.68</text><text x="585" y="428" text-anchor="middle">0.72</text><text x="740" y="428" text-anchor="middle">0.76</text>
+          </g>
+          <g font-size="19">
+            <!-- x = 120 + (v-0.60)/0.16*620 -->
+            <g><title>dog: 0.747</title><text x="100" y="36" fill="#F5F2EA" text-anchor="end">dog</text><line x1="120" y1="30" x2="690" y2="30" stroke="#2A3B57" stroke-dasharray="2 5"/><circle cx="690" cy="30" r="10" fill="#F2994A"/><text x="708" y="36" fill="#F5F2EA" font-weight="600" font-size="16">.747</text></g>
+            <g><title>kitten: 0.730</title><text x="100" y="78" fill="#F5F2EA" text-anchor="end">kitten</text><line x1="120" y1="72" x2="624" y2="72" stroke="#2A3B57" stroke-dasharray="2 5"/><circle cx="624" cy="72" r="10" fill="#F2994A"/><text x="642" y="78" fill="#F5F2EA" font-weight="600" font-size="16">.730</text></g>
+            <g><title>man: 0.661</title><text x="100" y="120" fill="#B9C2D0" text-anchor="end">man</text><line x1="120" y1="114" x2="356" y2="114" stroke="#2A3B57" stroke-dasharray="2 5"/><circle cx="356" cy="114" r="9" fill="#5B6B85"/><text x="374" y="120" fill="#B9C2D0" font-size="16">.661</text></g>
+            <g><title>woman: 0.658</title><text x="100" y="162" fill="#B9C2D0" text-anchor="end">woman</text><line x1="120" y1="156" x2="345" y2="156" stroke="#2A3B57" stroke-dasharray="2 5"/><circle cx="345" cy="156" r="9" fill="#5B6B85"/><text x="363" y="162" fill="#B9C2D0" font-size="16">.658</text></g>
+            <g><title>laptop: 0.647</title><text x="100" y="204" fill="#B9C2D0" text-anchor="end">laptop</text><line x1="120" y1="198" x2="302" y2="198" stroke="#2A3B57" stroke-dasharray="2 5"/><circle cx="302" cy="198" r="9" fill="#5B6B85"/><text x="320" y="204" fill="#B9C2D0" font-size="16">.647</text></g>
+            <g><title>banana: 0.645</title><text x="100" y="246" fill="#B9C2D0" text-anchor="end">banana</text><line x1="120" y1="240" x2="294" y2="240" stroke="#2A3B57" stroke-dasharray="2 5"/><circle cx="294" cy="240" r="9" fill="#5B6B85"/><text x="312" y="246" fill="#B9C2D0" font-size="16">.645</text></g>
+            <g><title>queen: 0.637</title><text x="100" y="288" fill="#B9C2D0" text-anchor="end">queen</text><line x1="120" y1="282" x2="263" y2="282" stroke="#2A3B57" stroke-dasharray="2 5"/><circle cx="263" cy="282" r="9" fill="#5B6B85"/><text x="281" y="288" fill="#B9C2D0" font-size="16">.637</text></g>
+            <g><title>apple: 0.630</title><text x="100" y="330" fill="#B9C2D0" text-anchor="end">apple</text><line x1="120" y1="324" x2="236" y2="324" stroke="#2A3B57" stroke-dasharray="2 5"/><circle cx="236" cy="324" r="9" fill="#5B6B85"/><text x="254" y="330" fill="#B9C2D0" font-size="16">.630</text></g>
+            <g><title>king: 0.629</title><text x="100" y="372" fill="#B9C2D0" text-anchor="end">king</text><line x1="120" y1="366" x2="232" y2="366" stroke="#2A3B57" stroke-dasharray="2 5"/><circle cx="232" cy="366" r="9" fill="#5B6B85"/><text x="250" y="372" fill="#B9C2D0" font-size="16">.629</text></g>
+          </g>
+        </svg>
+      </figure>
+      <div>
+        <div class="panel" style="margin-bottom:1.3em">
+          <p class="label o">embeddings.py</p>
+          <pre>king - man + woman  ~  <span class="s">queen</span></pre>
+        </div>
+        <ul class="points">
+          <li><b>Animals rank highest</b> next to “cat”.</li>
+          <li>Read scores <b>relative to each other</b>, not as percentages.</li>
+          <li>You'll use this for <b>search and RAG</b> in Module 3.</li>
+        </ul>
+      </div>
+    </div>
+    <p class="foot">Real output from embeddings.py · axis starts at 0.60 to show the gaps</p>
+  </section>
+
+  <!-- 8 -->
+  <section class="slide light" aria-label="The context problem">
+    <p class="eyebrow">Step 3 · Attention</p>
+    <h2>Same word, different meaning</h2>
+    <div class="bank">
+      <div class="card"><p class="q">We sat on the river <mark>bank</mark> and watched the boats.</p><p>bank = the edge of a river</p></div>
+      <div class="card"><p class="q">I moved money into my <mark>bank</mark> account.</p><p>bank = where money is kept</p></div>
+    </div>
+    <p class="lead">“bank” starts with the <strong>same embedding</strong> in both. The model needs the <span class="accent">surrounding words</span> to know which one you mean.</p>
+    <p class="foot">GenAI #3 · How LLMs work</p>
+  </section>
+
+  <!-- 9 -->
+  <section class="slide dark" aria-label="Attention">
+    <h2>Attention: every token looks back at context</h2>
+    <div class="scroll-x">
+      <svg class="diagram" viewBox="0 0 1386 380" role="img" aria-labelledby="att-t">
+        <title id="att-t">In the sentence "The animal didn't cross the street because it was too tired", the token "it" attends strongly to "animal", weakly to "street", and barely to the other earlier words. Illustrative weights.</title>
+        <!-- word centres -->
+        <g font-size="34" class="h" text-anchor="middle" font-family="Space Grotesk, sans-serif" font-weight="700">
+          <text x="40" y="330" fill="#B9C2D0">The</text>
+          <text x="165" y="330" fill="#F2994A">animal</text>
+          <text x="310" y="330" fill="#B9C2D0">didn't</text>
+          <text x="440" y="330" fill="#B9C2D0">cross</text>
+          <text x="545" y="330" fill="#B9C2D0">the</text>
+          <text x="665" y="330" fill="#B9C2D0">street</text>
+          <text x="825" y="330" fill="#B9C2D0">because</text>
+          <text x="960" y="330" fill="#F5F2EA">it</text>
+          <text x="1050" y="330" fill="#5B6B85">was</text>
+          <text x="1140" y="330" fill="#5B6B85">too</text>
+          <text x="1250" y="330" fill="#5B6B85">tired</text>
+        </g>
+        <rect x="930" y="290" width="60" height="56" rx="10" fill="none" stroke="#F5F2EA" stroke-width="2"/>
+        <!-- arcs from "it" (960) back to earlier tokens; thickness = attention -->
+        <g fill="none" stroke-linecap="round">
+          <path d="M960,288 Q562,-40 165,288" stroke="#F2994A" stroke-width="12"/>
+          <path d="M960,288 Q812,140 665,288" stroke="#5B6B85" stroke-width="4"/>
+          <path d="M960,288 Q700,60 440,288" stroke="#5B6B85" stroke-width="2"/>
+          <path d="M960,288 Q500,-80 40,288" stroke="#5B6B85" stroke-width="1.5"/>
+          <path d="M960,288 Q892,215 825,288" stroke="#5B6B85" stroke-width="1.5"/>
+        </g>
+        <g font-size="18" fill="#B9C2D0">
+          <text x="562" y="105" text-anchor="middle" fill="#F5F2EA" font-weight="600">strong</text>
+        </g>
+        <text x="1250" y="372" fill="#5B6B85" font-size="16" text-anchor="middle">not seen yet</text>
+      </svg>
+    </div>
+    <p class="lead" style="margin-top:.6em">“it” pulls most of its meaning from <span class="accent">“animal”</span>. Models only look <strong>backwards</strong>, at tokens already seen.</p>
+    <p class="foot">Illustrative weights · thicker line = more attention</p>
+  </section>
+
+  <!-- 10 -->
+  <section class="slide light qkv" aria-label="Query, key, value">
+    <h2>How a token decides what to look at</h2>
+    <div class="row cols-3">
+      <div class="card"><p class="label">Query</p><h3>“What am I looking for?”</h3><p>“it” asks: which earlier word is a thing that could be tired?</p></div>
+      <div class="card"><p class="label">Key</p><h3>“What do I contain?”</h3><p>Every earlier token advertises what it is: “animal” says <i>I'm a living thing</i>.</p></div>
+      <div class="card hl"><p class="label">Value</p><h3>“What do I pass on?”</h3><p>Good query–key matches get more weight, and their values are mixed into “it”.</p></div>
+    </div>
+    <p class="lead">Many attention <strong>heads</strong> run side by side, and the block repeats across <strong>dozens of layers</strong>: early layers catch grammar, later ones build facts and intent.</p>
+    <p class="foot">GenAI #3 · How LLMs work</p>
+  </section>
+
+  <!-- 11 -->
+  <section class="slide dark" aria-label="Step 4: next-token prediction">
+    <p class="eyebrow">Step 4 · Predict the next token</p>
+    <div class="split">
+      <figure style="margin:0">
+        <p class="chart-title">Prompt <b>“The capital of France is”</b> · top 5 next tokens, gemma3:1b</p>
+        <div class="bars" role="list">
+          <div class="bar pick" role="listitem" title="' Paris': 44.1% (picked)"><span class="tok">' Paris'</span><span class="track"><span class="fill" style="width:88.2%"></span></span><span class="val">44.1%</span></div>
+          <div class="bar" role="listitem" title="'?': 6.2%"><span class="tok">'?'</span><span class="track"><span class="fill" style="width:12.4%"></span></span><span class="val">6.2%</span></div>
+          <div class="bar" role="listitem" title="':': 4.2%"><span class="tok">':'</span><span class="track"><span class="fill" style="width:8.4%"></span></span><span class="val">4.2%</span></div>
+          <div class="bar" role="listitem" title="'...': 3.6%"><span class="tok">'...'</span><span class="track"><span class="fill" style="width:7.2%"></span></span><span class="val">3.6%</span></div>
+          <div class="bar" role="listitem" title="'…': 3.0%"><span class="tok">'…'</span><span class="track"><span class="fill" style="width:6%"></span></span><span class="val">3.0%</span></div>
+        </div>
+        <p class="grow">The capital of France is<span> Paris</span><br>The capital of France is Paris<span>.</span><br>…Paris.<span>\n\nThe</span><span> largest</span><span> city</span></p>
+      </figure>
+      <div class="loop-card">
+        <ol>
+          <li>Score <b>every token</b> in the vocabulary (100k–250k)</li>
+          <li><b>Pick one</b>: here, the most likely</li>
+          <li><b>Append</b> it to the text</li>
+          <li><b>Repeat</b> until done</li>
+        </ol>
+        <p style="margin-top:1.2em;font-size:1.25em;line-height:1.55;color:var(--mist)">Why replies <b style="color:var(--cream)">stream</b>, why <b style="color:var(--cream)">output costs more</b>, and why answers can <b style="color:var(--cream)">vary</b> (temperature, Episode 5).</p>
+      </div>
+    </div>
+    <p class="foot">Real output from next_token.py · bar length scaled to 50%</p>
+  </section>
+
+  <!-- 12 -->
+  <section class="slide light" aria-label="Where knowledge comes from">
+    <h2>Where the knowledge comes from</h2>
+    <div class="flow">
+      <div class="card"><p class="label">Data</p><h3>Trillions of tokens</h3><p>Web text, books, code</p></div>
+      <div class="card"><p class="label">Pre-training</p><h3>Guess the next token</h3><p>Nudge billions of weights each time it's wrong</p></div>
+      <div class="card"><p class="label">Base model</p><h3>Great at continuing text</h3><p>Not yet a helpful assistant</p></div>
+      <div class="card hl"><p class="label">Tuning + feedback</p><h3>Assistant model</h3><p>Claude, GPT, Gemini follow instructions</p></div>
+    </div>
+    <div class="warn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+      <p><b>Why LLMs hallucinate:</b> they produce the most <b>plausible</b> next token, not a fact looked up from a database. Ground answers in your data (RAG) and evaluate them.</p>
+    </div>
+    <p class="foot">GenAI #3 · How LLMs work</p>
+  </section>
+
+  <!-- 13 -->
+  <section class="slide dark" aria-label="What this means for you">
+    <h2>What this means for you as an engineer</h2>
+    <div class="imp">
+      <div><i>Reads tokens, not words</i><span class="arrow">→</span><b>Estimate cost and limits in tokens</b></div>
+      <div><i>Only sees what's in the context</i><span class="arrow">→</span><b>Put the right information in the prompt</b></div>
+      <div><i>Predicts plausible text</i><span class="arrow">→</span><b>Ground answers and evaluate them</b></div>
+      <div><i>Generates one token at a time</i><span class="arrow">→</span><b>Stream replies, keep outputs tight</b></div>
+      <div><i>Can sample differently each run</i><span class="arrow">→</span><b>Set temperature, test more than once</b></div>
+    </div>
+    <p class="foot">GenAI #3 · How LLMs work</p>
+  </section>
+
+  <!-- 14 -->
+  <section class="slide dark s-interview" aria-label="Interview question">
+    <p class="eyebrow">Interview question · FDE</p>
+    <blockquote>“Explain attention to a non-technical customer in 60 seconds.”</blockquote>
+    <div class="answer">
+      <p class="label">A strong answer</p>
+      <p>When you read “the bank was flooded after the storm”, you know it's a river bank because of the words around it. Attention gives the model that skill: for every word, it looks back at the others, decides which matter most, and updates the meaning. That's how it tracks context, and why <b>what you put in the prompt matters so much</b>.</p>
+    </div>
+    <p class="foot">Pause the video and say it in your own words.</p>
+  </section>
+
+  <!-- 15 -->
+  <section class="slide orange s-next" aria-label="Up next">
+    <p class="eyebrow">Up next · Episode 04</p>
+    <h2>Tokenization and context windows</h2>
+    <div class="pills"><span>Counting tokens</span><span>Context limits</span><span>Cost and latency</span></div>
+    <p class="msg">Run the three demos: <a href="https://github.com/Amitpnk/genai-zero-to-production/tree/main/ep03-how-llms-work">tokens, embeddings, next token</a>.</p>
+    <p class="foot">GenAI #3 · How LLMs work</p>
+  </section>
+
+</main>
+
+<p class="present-hint">← → to move · Esc to exit</p>
+<script src="../assets/deck.js"></script>
+</body>
+</html>
