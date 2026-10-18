@@ -1,0 +1,441 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ep 02 · Dev Environment Setup · GenAI Zero to Production</title>
+<meta name="description" content="Slides for GenAI Engineering Episode 2: Python, uv, VS Code, API keys for Anthropic, OpenAI, Gemini and AWS Bedrock, and how to never leak them.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/deck.css">
+<style>
+  /* Title slide */
+  .s-title { display: flex; flex-direction: column; justify-content: center; }
+  .s-title .big-num {
+    position: absolute; right: .3em; top: .05em;
+    font: 700 20em/1 var(--head); color: #1A2840; letter-spacing: -.04em;
+  }
+  .s-title h1 { position: relative; font-size: 7.4em; font-weight: 500; line-height: .98; letter-spacing: -.02em; margin-bottom: .45em; }
+  .s-title .sub { position: relative; font-size: 1.75em; line-height: 1.45; color: var(--mist); max-width: 34em; }
+  .s-title .byline { display: flex; align-items: center; gap: 1em; margin-top: 2.6em; font-size: 1.15em; letter-spacing: .06em; color: var(--mist); }
+  .s-title .byline::before { content: ""; width: 3.3em; height: 2px; background: var(--orange); }
+
+  /* Python slide */
+  .s-python .grid { display: grid; grid-template-columns: 1fr 1.05fr; gap: 6em; align-items: start; }
+  .s-python .ver { font: 700 6.2em/1 var(--head); margin-bottom: .3em; }
+  .s-python .lead { font-size: 2.4em; margin-top: 0; }
+  .s-python .panel pre { font-size: 1.55em; }
+
+  /* VS Code slide */
+  .s-vscode .grid { display: grid; grid-template-columns: 1fr 1fr 1.5fr; gap: 1.3em; }
+  .s-vscode .callout { grid-column: 3; grid-row: 1 / span 2; background: var(--ink); color: var(--cream); border-radius: .75em; padding: 2.4em 2.3em; }
+  .s-vscode .callout h3 { font-size: 1.7em; margin-bottom: .7em; }
+  .s-vscode .callout p { font-size: 1.3em; line-height: 1.6; color: var(--mist); }
+  .s-vscode .callout .icon { color: var(--orange); }
+  .s-vscode .card { padding: 1.6em 1.7em; }
+  .s-vscode .card h3 { margin-bottom: .4em; }
+
+  /* Bedrock slide */
+  .s-bedrock .row { grid-template-columns: 1.6fr 1fr 1fr; }
+  .s-bedrock .panel { margin-top: .4em; padding: 1.3em 1.4em; }
+  .s-bedrock .panel pre { font-size: .92em; line-height: 1.7; }
+
+  /* Rules slide */
+  .rules { list-style: none; margin: 0; padding: 0; display: grid; gap: .85em; }
+  .rules li { display: flex; gap: 1.6em; align-items: baseline; background: var(--ink-2); border-radius: .5em; padding: 1.1em 1.6em; font-size: 1.65em; color: var(--mist); }
+  .rules li b { color: var(--cream); }
+  .rules li .n { font-family: var(--head); font-weight: 700; color: var(--orange); min-width: 1.4em; }
+  .rules li.hot { background: var(--orange); color: var(--ink); }
+  .rules li.hot b, .rules li.hot .n { color: var(--ink); }
+
+  /* Files slide */
+  .s-files .row { grid-template-columns: 1fr 1.86fr; }
+  .s-files .panel pre { font-size: 1.3em; line-height: 1.7; letter-spacing: .03em; }
+  .s-files .lead { font-size: 1.75em; }
+  .s-files .lead b { color: var(--ink); }
+
+  /* Smoke test slide */
+  .s-smoke .grid { display: grid; grid-template-columns: 1.62fr 1fr; gap: 1.6em; }
+  .s-smoke .side { display: grid; gap: 1.3em; align-content: start; }
+  .s-smoke .panel pre { font-size: 1.15em; line-height: 1.65; }
+  .s-smoke .fails p { font-size: 1.3em; line-height: 1.7; color: var(--mist); }
+  .s-smoke .fails b { color: var(--cream); }
+
+  /* Repo slide */
+  .s-repo .grid { display: grid; grid-template-columns: .9fr 1.15fr; gap: 1.6em; align-items: start; }
+  .s-repo .side { display: grid; gap: 1.3em; }
+  .s-repo .panel pre { font-size: 1.2em; line-height: 1.7; }
+  .s-repo .card h3 { margin-bottom: .4em; }
+
+  /* Interview slide */
+  .s-interview blockquote { margin: 0 0 1.4em; font: 500 3.3em/1.18 var(--head); letter-spacing: -.02em; }
+  .s-interview .card { padding: 1.7em 1.6em; }
+  .s-interview .card .label { color: var(--orange); }
+  .s-interview .card.fill .label { color: var(--ink); }
+  .s-interview .lead { color: var(--cream); }
+
+  /* Next slide */
+  .s-next { display: flex; flex-direction: column; justify-content: center; }
+  .s-next h2 { font-size: 4.6em; margin-bottom: .45em; }
+  .pills { display: flex; gap: 1em; flex-wrap: wrap; margin-bottom: 2em; }
+  .pills span { background: var(--cream); border-radius: 999px; padding: .6em 1.6em; font-size: 1.6em; }
+  .s-next .msg { font-size: 1.6em; }
+
+  @media (max-width: 720px) {
+    .s-title .big-num { display: none; }
+    .s-title h1 { font-size: 5em; }
+    .s-python .grid, .s-vscode .grid, .s-smoke .grid, .s-repo .grid { grid-template-columns: 1fr; gap: 1.6em; }
+    .s-vscode .callout { grid-column: auto; grid-row: auto; }
+    .s-bedrock .row, .s-files .row { grid-template-columns: 1fr; }
+    .s-python .ver { font-size: 5em; }
+    .s-interview blockquote { font-size: 2.6em; }
+    .s-next h2 { font-size: 3.4em; }
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="../">GenAI <span>Zero to Production</span></a>
+  <nav aria-label="Episode">
+    <a href="https://github.com/Amitpnk/genai-zero-to-production/tree/main/ep02-setup">Episode notes</a>
+    <a href="https://github.com/Amitpnk/genai-zero-to-production">GitHub repo</a>
+    <button class="btn" type="button" data-present>Present (P)</button>
+  </nav>
+</header>
+
+<main class="deck" aria-label="Episode 2 slides">
+
+  <!-- 1 -->
+  <section class="slide dark s-title" aria-label="Title">
+    <div class="big-num" aria-hidden="true">02</div>
+    <p class="eyebrow">GenAI Engineering · Episode 02</p>
+    <h1>Set up your GenAI<br>dev environment</h1>
+    <p class="sub">Python, uv, VS Code, API keys for Anthropic, OpenAI, Gemini and AWS Bedrock, and how to never leak them.</p>
+    <p class="byline">Amit · Generative AI &amp; Agentic AI Instructor</p>
+  </section>
+
+  <!-- 2 -->
+  <section class="slide light" aria-label="What we'll set up today">
+    <h2>What we'll set up today</h2>
+    <div class="row cols-5">
+      <div class="card">
+        <p class="label">01</p>
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m18 16 4-4-4-4"/><path d="m6 8-4 4 4 4"/><path d="m14.5 4-5 16"/></svg>
+        <h3>Python + uv</h3>
+        <p>Isolated, reproducible projects</p>
+      </div>
+      <div class="card">
+        <p class="label">02</p>
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+        <h3>VS Code</h3>
+        <p>Python, notebooks, linting</p>
+      </div>
+      <div class="card">
+        <p class="label">03</p>
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="7.5" cy="15.5" r="5.5"/><path d="m21 2-9.6 9.6"/><path d="m15.5 7.5 3 3L22 7l-3-3"/></svg>
+        <h3>API keys</h3>
+        <p>Anthropic, OpenAI, Gemini, AWS Bedrock</p>
+      </div>
+      <div class="card hl">
+        <p class="label">04</p>
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        <h3>.env hygiene</h3>
+        <p>Keys out of code and out of Git</p>
+      </div>
+      <div class="card">
+        <p class="label">05</p>
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+        <h3>Companion repo</h3>
+        <p>Cloned, synced, smoke-tested</p>
+      </div>
+    </div>
+    <p class="lead">Already have some of this? Use the chapters. <span class="accent">Just don't skip step 04.</span></p>
+    <p class="foot">GenAI #2 · Dev Environment Setup</p>
+  </section>
+
+  <!-- 3 -->
+  <section class="slide dark s-python" aria-label="Step 1: Python">
+    <p class="eyebrow">Step 01 · Python</p>
+    <div class="grid">
+      <div>
+        <p class="ver">3.11+</p>
+        <p class="lead">Minimum Python version for this series. I'll record on 3.12.</p>
+      </div>
+      <div class="panel">
+        <p class="label">terminal</p>
+        <pre>$ python --version
+<span class="c">Python 3.12.x</span></pre>
+        <p class="muted" style="font-size:1.25em;margin-top:1em">macOS / Linux: try <code class="accent">python3 --version</code></p>
+      </div>
+    </div>
+    <p class="foot">Older or missing? uv can install Python for you.</p>
+  </section>
+
+  <!-- 4 -->
+  <section class="slide light" aria-label="One environment per project">
+    <h2>One environment per project: two ways</h2>
+    <table class="cmp">
+      <thead><tr><th scope="col"><span class="hide-sm">&nbsp;</span></th><th scope="col">venv + pip</th><th scope="col" class="accent">uv (used in this series)</th></tr></thead>
+      <tbody>
+        <tr><th scope="row">Comes from</th><td>Built into Python</td><td>Astral, a single install</td></tr>
+        <tr><th scope="row">Python versions</th><td>Install them yourself</td><td><code>uv python install 3.12</code></td></tr>
+        <tr><th scope="row">Dependencies</th><td>pip + requirements.txt</td><td>pyproject.toml + uv.lock</td></tr>
+        <tr><th scope="row">Reproducible</th><td>Only if you pin manually</td><td>Yes, via the lock file</td></tr>
+        <tr><th scope="row">Speed</th><td>Standard</td><td>Much faster installs</td></tr>
+      </tbody>
+    </table>
+    <p class="lead">Know both. Use <strong>uv</strong> for new projects; I'll show the venv equivalent for every step.</p>
+    <p class="foot">GenAI #2 · Dev Environment Setup</p>
+  </section>
+
+  <!-- 5 -->
+  <section class="slide dark" aria-label="Install uv and create the project">
+    <h2>Install uv and create the project</h2>
+    <div class="row">
+      <div class="panel">
+        <p class="label">1 · install uv</p>
+        <pre><span class="c"># macOS / Linux</span>
+curl -LsSf https://astral.sh/uv/install.sh | sh
+<span class="c"># Windows (PowerShell)</span>
+powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"</pre>
+      </div>
+      <div class="panel">
+        <p class="label o">2 · create the project</p>
+        <pre>uv python install 3.12
+uv init genai-engineering --python 3.12
+cd genai-engineering
+uv add anthropic openai google-genai boto3 python-dotenv
+uv run python --version</pre>
+      </div>
+    </div>
+    <p class="foot">Creates .venv, pyproject.toml and uv.lock · uv run needs no activation</p>
+  </section>
+
+  <!-- 6 -->
+  <section class="slide light s-vscode" aria-label="VS Code setup">
+    <h2>VS Code: four extensions, one setting</h2>
+    <div class="grid">
+      <div class="card"><h3>Python + Pylance</h3><p>Run, debug, type-aware autocomplete</p></div>
+      <div class="card"><h3>Jupyter</h3><p>Notebooks for quick experiments</p></div>
+      <div class="callout">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+        <h3>The step everyone forgets</h3>
+        <p>Ctrl/Cmd + Shift + P<br>→ <span class="accent">Python: Select Interpreter</span><br>→ pick the one in .venv</p>
+        <p style="margin-top:1em">Red import squiggles? This is almost always why.</p>
+      </div>
+      <div class="card"><h3>Ruff</h3><p>Fast linter and formatter; turn on format on save</p></div>
+      <div class="card"><h3>DotENV <span style="color:var(--slate)">(optional)</span></h3><p>Highlighting for .env files</p></div>
+    </div>
+    <p class="foot">GenAI #2 · Dev Environment Setup</p>
+  </section>
+
+  <!-- 7 -->
+  <section class="slide dark" aria-label="Four providers, two ways to authenticate">
+    <h2>Four providers, two ways to authenticate</h2>
+    <div class="row cols-4">
+      <div class="card">
+        <p class="label">Anthropic</p>
+        <h3>API key from the Console</h3>
+        <p>API Keys → Create Key → copy once. Set a spend limit under Limits.</p>
+        <p class="var">ANTHROPIC_API_KEY</p>
+      </div>
+      <div class="card">
+        <p class="label">OpenAI</p>
+        <h3>API key from the Platform</h3>
+        <p>A dedicated project → API keys → create secret key. Set a budget.</p>
+        <p class="var">OPENAI_API_KEY</p>
+      </div>
+      <div class="card">
+        <p class="label">Google Gemini</p>
+        <h3>API key from AI Studio</h3>
+        <p>Get API key → Create API key in a Cloud project. Set a budget alert.</p>
+        <p class="var">GEMINI_API_KEY</p>
+      </div>
+      <div class="card hl">
+        <p class="label">AWS Bedrock</p>
+        <h3>Your AWS identity</h3>
+        <p>No single key: an AWS profile via SSO or IAM, plus model access in your region.</p>
+        <p class="var">AWS_PROFILE</p>
+      </div>
+    </div>
+    <p class="foot">All pay-as-you-go: set a spending limit on every account today.</p>
+  </section>
+
+  <!-- 8 -->
+  <section class="slide light s-bedrock" aria-label="AWS Bedrock in three steps">
+    <h2>AWS Bedrock in three steps</h2>
+    <div class="row">
+      <div class="card">
+        <p class="label">01 · Credentials</p>
+        <h3>Configure an AWS profile</h3>
+        <div class="panel">
+          <pre><span class="c"># preferred</span>
+aws configure sso --profile genai-course
+<span class="c"># personal dev account</span>
+aws configure --profile genai-course
+<span class="c"># check who you are</span>
+aws sts get-caller-identity --profile genai-course</pre>
+        </div>
+      </div>
+      <div class="card">
+        <p class="label">02 · Region + access</p>
+        <h3>Check model access</h3>
+        <p>Pick a Bedrock region (I use us-east-1). Some providers need a one-time access request or use-case form.</p>
+      </div>
+      <div class="card">
+        <p class="label">03 · Model ID</p>
+        <h3>Copy it into .env</h3>
+        <p>Take the model or inference profile ID from the catalog. Never hardcode it.</p>
+      </div>
+    </div>
+    <p class="lead">Model versions change often, so <strong>every model name lives in .env</strong>, not in code.</p>
+    <p class="foot">GenAI #2 · Dev Environment Setup</p>
+  </section>
+
+  <!-- 9 -->
+  <section class="slide dark" aria-label="Five rules for API keys">
+    <h2>Five rules for API keys</h2>
+    <ol class="rules">
+      <li><span class="n">01</span><span><b>Never hardcode a key</b> in a .py file or notebook, not even for a test</span></li>
+      <li><span class="n">02</span><span><b>.env goes in .gitignore</b> before you create the file</span></li>
+      <li><span class="n">03</span><span><b>Commit a .env.example</b> with names and fake values only</span></li>
+      <li><span class="n">04</span><span><b>Least privilege + limits</b> one key per project, spend caps, short-lived AWS creds</span></li>
+      <li class="hot"><span class="n">05</span><span><b>Leaked? Revoke immediately.</b> Deleting the commit isn't enough.</span></li>
+    </ol>
+    <p class="foot">GenAI #2 · Dev Environment Setup</p>
+  </section>
+
+  <!-- 10 -->
+  <section class="slide light s-files" aria-label="The two files that protect you">
+    <h2>The two files that protect you</h2>
+    <div class="row">
+      <div class="panel">
+        <p class="label">.gitignore</p>
+        <pre><span class="s">.env</span>
+.venv/
+__pycache__/
+.ipynb_checkpoints/</pre>
+      </div>
+      <div class="panel">
+        <p class="label">.env.example <span class="muted">· committed, no secrets</span></p>
+        <pre>ANTHROPIC_API_KEY=your-anthropic-key
+ANTHROPIC_MODEL=model-id-from-anthropic-docs
+OPENAI_API_KEY=your-openai-key
+OPENAI_MODEL=model-id-from-openai-docs
+GEMINI_API_KEY=your-gemini-key
+GEMINI_MODEL=model-id-from-gemini-docs
+AWS_PROFILE=genai-course
+AWS_REGION=us-east-1
+BEDROCK_MODEL_ID=model-id-from-bedrock-catalog</pre>
+      </div>
+    </div>
+    <p class="lead"><b><code>cp .env.example .env</code></b> → paste real values. The SDKs read these variables automatically.</p>
+    <p class="foot">GenAI #2 · Dev Environment Setup</p>
+  </section>
+
+  <!-- 11 -->
+  <section class="slide dark s-smoke" aria-label="Smoke test: one call per provider">
+    <h2>Smoke test: one call per provider</h2>
+    <div class="grid">
+      <div class="panel">
+        <p class="label">hello_anthropic.py</p>
+        <pre>import os
+from dotenv import load_dotenv
+import anthropic
+
+load_dotenv()
+client = anthropic.Anthropic()  <span class="c"># reads ANTHROPIC_API_KEY</span>
+
+msg = client.messages.create(
+    model=os.environ[<span class="s">"ANTHROPIC_MODEL"</span>],
+    max_tokens=200,
+    messages=[{"role": "user",
+               "content": "Say hello in one sentence."}],
+)
+print(msg.content[0].text)</pre>
+      </div>
+      <div class="side">
+        <div class="panel">
+          <p class="label o">run all four</p>
+          <pre>uv run python hello_anthropic.py
+uv run python hello_openai.py
+uv run python hello_gemini.py
+uv run python hello_bedrock.py</pre>
+        </div>
+        <div class="panel soft fails">
+          <p class="label">if it fails</p>
+          <p><b>401 / auth error</b> → key in .env<br>
+             <b>AccessDenied</b> (Bedrock) → model access or IAM<br>
+             <b>429</b> (Gemini) → free-tier rate limit<br>
+             <b>KeyError</b> → variable missing from .env</p>
+        </div>
+      </div>
+    </div>
+    <p class="foot">OpenAI, Gemini and Bedrock (Converse API) versions are <a href="https://github.com/Amitpnk/genai-zero-to-production/tree/main/ep02-setup">in the repo</a>, same pattern.</p>
+  </section>
+
+  <!-- 12 -->
+  <section class="slide light s-repo" aria-label="The companion repo">
+    <h2>The companion repo</h2>
+    <div class="grid">
+      <div class="panel">
+        <p class="label">structure</p>
+        <pre>genai-zero-to-production/
+├── README.md        <span class="c"># episode index</span>
+├── pyproject.toml
+├── uv.lock          <span class="c"># pinned versions</span>
+├── .env.example
+├── .gitignore
+├── shared/          <span class="c"># reused helpers</span>
+├── <span class="s">ep02-setup/</span>      <span class="c"># today</span>
+├── ep03-how-llms-work/
+└── ...              <span class="c"># one folder per episode</span></pre>
+      </div>
+      <div class="side">
+        <div class="panel">
+          <p class="label o">get started</p>
+          <pre>git clone https://github.com/Amitpnk/genai-zero-to-production
+cd genai-zero-to-production
+uv sync
+cp .env.example .env</pre>
+        </div>
+        <div class="card">
+          <h3>Fell behind?</h3>
+          <p>git pull, then uv sync. Found a bug? <a href="https://github.com/Amitpnk/genai-zero-to-production/issues">Open an issue.</a></p>
+        </div>
+      </div>
+    </div>
+    <p class="foot">GenAI #2 · Dev Environment Setup</p>
+  </section>
+
+  <!-- 13 -->
+  <section class="slide dark s-interview" aria-label="Interview question">
+    <p class="eyebrow">Interview question · FDE</p>
+    <blockquote>“A customer pushed an LLM API key to a public GitHub repo. What do you do?”</blockquote>
+    <div class="row cols-4">
+      <div class="card fill"><p class="label">1</p><h3>Revoke and rotate</h3><p>Stops the damage now</p></div>
+      <div class="card"><p class="label">2</p><h3>Check usage</h3><p>Logs and billing for anything unexpected</p></div>
+      <div class="card"><p class="label">3</p><h3>Clean history</h3><p>git-filter-repo; forks may still have it</p></div>
+      <div class="card"><p class="label">4</p><h3>Prevent repeats</h3><p>.gitignore, push protection, pre-commit scanner</p></div>
+    </div>
+    <p class="lead">What interviewers listen for: <span class="accent">rotation comes before cleanup.</span></p>
+    <p class="foot">Pause the video and say it in your own words.</p>
+  </section>
+
+  <!-- 14 -->
+  <section class="slide orange s-next" aria-label="Up next">
+    <p class="eyebrow">Up next · Episode 03</p>
+    <h2>How LLMs actually work</h2>
+    <div class="pills"><span>Tokens</span><span>Embeddings</span><span>Attention, without heavy maths</span></div>
+    <p class="msg">Smoke test failed? Drop the error in the comments and I'll help.</p>
+    <p class="foot">GenAI #2 · Dev Environment Setup</p>
+  </section>
+
+</main>
+
+<p class="present-hint">← → to move · Esc to exit</p>
+<script src="../assets/deck.js"></script>
+</body>
+</html>

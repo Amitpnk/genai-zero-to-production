@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GenAI Zero to Production</title>
+<meta name="description" content="Slides and notes for the GenAI Engineering YouTube series: from your first API call to a production AI agent on AWS.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/deck.css">
+<style>
+  .home { width: min(100% - 32px, 1040px); margin: 0 auto; padding: 72px 0 80px; }
+  .home .eyebrow { font-size: 13px; letter-spacing: .25em; text-transform: uppercase; color: var(--orange); margin: 0 0 18px; }
+  .home h1 { font: 700 clamp(36px, 6vw, 64px)/1.05 var(--head); letter-spacing: -.02em; margin: 0 0 20px; }
+  .home .intro { font-size: 19px; line-height: 1.55; color: var(--mist); max-width: 40em; margin: 0 0 40px; }
+  .home h2 { font: 700 22px var(--head); margin: 48px 0 16px; }
+  .eps { display: grid; gap: 12px; }
+  .ep {
+    display: grid; grid-template-columns: 56px 1fr auto; gap: 16px; align-items: center;
+    background: var(--ink); border: 1px solid #1A2840; border-radius: 12px; padding: 18px 20px;
+  }
+  .ep .num { font: 700 24px var(--head); color: var(--orange); }
+  .ep h3 { margin: 0 0 4px; font: 600 18px var(--body); }
+  .ep p { margin: 0; color: var(--mist); font-size: 15px; line-height: 1.5; }
+  .ep .links { display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
+  .ep .links a { font-size: 14px; text-decoration: none; padding: 7px 12px; border-radius: 8px; border: 1px solid var(--line-dark); color: var(--cream); white-space: nowrap; }
+  .ep .links a.primary { background: var(--orange); border-color: var(--orange); color: var(--ink); font-weight: 600; }
+  .ep .links a:hover { border-color: var(--mist); }
+  .ep .links a:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+  .ep.soon { opacity: .6; }
+  .roadmap { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
+  .roadmap div { background: #0C1422; border: 1px solid #1A2840; border-radius: 10px; padding: 14px 16px; font-size: 15px; }
+  .roadmap b { display: block; font-family: var(--mono); font-weight: 500; color: var(--orange); font-size: 12px; margin-bottom: 4px; }
+  .roadmap span { color: var(--mist); font-size: 13px; }
+  .home footer { margin-top: 56px; color: #8893A6; font-size: 14px; }
+  @media (max-width: 640px) {
+    .home { padding-top: 40px; }
+    .ep { grid-template-columns: 40px 1fr; }
+    .ep .links { grid-column: 1 / -1; justify-content: flex-start; }
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="./">GenAI <span>Zero to Production</span></a>
+  <nav aria-label="Site">
+    <a href="https://github.com/Amitpnk/genai-zero-to-production">GitHub repo</a>
+  </nav>
+</header>
+
+<main class="home">
+  <p class="eyebrow">GenAI Engineering · YouTube series</p>
+  <h1>From your first API call to a production AI agent on AWS</h1>
+  <p class="intro">Slides and notes for every episode. All the code lives in the companion GitHub repo, one folder per episode.</p>
+
+  <h2>Episodes</h2>
+  <div class="eps">
+    <article class="ep">
+      <span class="num">01</span>
+      <div><h3>What is GenAI Engineering?</h3><p>How it differs from ML engineering and data science, and the roadmap.</p></div>
+      <div class="links">
+        <a href="https://github.com/Amitpnk/genai-zero-to-production/tree/main/ep01-what-is-genai-engineering">Notes</a>
+      </div>
+    </article>
+    <article class="ep">
+      <span class="num">02</span>
+      <div><h3>Dev Environment Setup</h3><p>Python, uv, VS Code, API keys for Anthropic, OpenAI, Gemini and AWS Bedrock, and how to never leak them.</p></div>
+      <div class="links">
+        <a class="primary" href="ep02-setup/">Slides</a>
+        <a href="https://github.com/Amitpnk/genai-zero-to-production/tree/main/ep02-setup">Notes</a>
+      </div>
+    </article>
+    <article class="ep soon">
+      <span class="num">03</span>
+      <div><h3>How LLMs actually work</h3><p>Tokens, embeddings and attention, without heavy maths. Coming soon.</p></div>
+      <div class="links"></div>
+    </article>
+  </div>
+
+  <h2>Roadmap: 10 modules + capstone</h2>
+  <div class="roadmap">
+    <div><b>01 · Ep 3–7</b>LLM Foundations</div>
+    <div><b>02 · Ep 8–11</b>Prompt Engineering</div>
+    <div><b>03 · Ep 12–15</b>Embeddings &amp; Vector DBs</div>
+    <div><b>04 · Ep 16–21</b>RAG &amp; Graph RAG</div>
+    <div><b>05 · Ep 22–24</b>Fine-tuning &amp; Open Models</div>
+    <div><b>06 · Ep 25–26</b>Multimodal GenAI</div>
+    <div><b>07 · Ep 27–31</b>Agentic AI Fundamentals</div>
+    <div><b>08 · Ep 32–35</b>MCP &amp; Multi-Agent</div>
+    <div><b>09 · Ep 36–38</b>Evals &amp; Observability</div>
+    <div><b>10 · Ep 39–41</b>Production on AWS</div>
+    <div><b>Capstone · Ep 42</b>Ship an ask-your-docs agent<br><span>RAG + MCP + evals on AWS</span></div>
+  </div>
+  <p style="margin-top:16px"><a href="https://github.com/Amitpnk/genai-zero-to-production#syllabus-42-episodes-10-modules--capstone" style="color:var(--mist)">See the full syllabus →</a></p>
+
+  <footer>Amit · Generative AI &amp; Agentic AI Instructor</footer>
+</main>
+
+</body>
+</html>
