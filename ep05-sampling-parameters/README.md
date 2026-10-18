@@ -174,7 +174,7 @@ Practise it: say it out loud in your own words before moving on.
 
 ## Next up
 
-**Episode 06: The model landscape.** Closed vs open-weight models, model families, and how to choose the right one for a use case.
+**[Episode 06: The model landscape](../ep06-model-landscape/).** Closed vs open-weight models, model families, and how to choose the right one for a use case.
 
 ---
 

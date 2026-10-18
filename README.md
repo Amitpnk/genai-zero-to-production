@@ -41,6 +41,7 @@ genai-zero-to-production/
 | 03 | How LLMs actually work | [ep03-how-llms-work](ep03-how-llms-work/) |
 | 04 | Tokens and context windows | [ep04-tokens-and-context-windows](ep04-tokens-and-context-windows/) |
 | 05 | Sampling parameters | [ep05-sampling-parameters](ep05-sampling-parameters/) |
+| 06 | The model landscape | [ep06-model-landscape](ep06-model-landscape/) |
 
 ## Syllabus: 42 episodes, 10 modules + capstone
 
