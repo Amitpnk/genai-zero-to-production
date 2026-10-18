@@ -22,17 +22,11 @@ Every chat reply, every summary and every line of code you've seen an LLM write 
 
 ## 2. The whole picture
 
-```mermaid
-flowchart LR
-    A["Your text<br/><i>The capital of France is</i>"] --> B["1 · Tokenizer<br/>text → token IDs"]
-    B --> C["2 · Embeddings<br/>IDs → vectors of meaning"]
-    C --> D["3 · Transformer layers<br/>attention + feed-forward<br/>× dozens of layers"]
-    D --> E["4 · Probabilities<br/>for every possible next token"]
-    E --> F["Pick one<br/><b>' Paris'</b>"]
-    F -- "append and repeat" --> A
-```
+![Pipeline: your text goes through the tokenizer, embeddings, transformer layers and next-token probabilities; one token (' Paris') is picked, appended, and the loop repeats](images/01-whole-picture.png)
 
 We'll walk through each box in order.
+
+> Diagram sources: [`diagrams.drawio`](diagrams.drawio), one page per diagram. Open it in draw.io to edit.
 
 ---
 
@@ -50,12 +44,7 @@ Real output from [`tokens.py`](tokens.py), which uses the `o200k_base` tokenizer
 | `ChatGPT, Claude and Gemini` | 6 | `Chat` · `GPT` · `,` · ` Claude` · ` and` · ` Gemini` |
 | `नमस्ते दुनिया` ("Hello world" in Hindi) | 5 | `न` · `म` · `स्त` · `े` · ` दुनिया` |
 
-```mermaid
-flowchart LR
-    T["unbelievable"] --> P1["un · 373"]
-    T --> P2["bel · 9880"]
-    T --> P3["ievable · 45794"]
-```
+![The word unbelievable splits into three tokens: un (ID 373), bel (ID 9880) and ievable (ID 45794)](images/02-tokens.png)
 
 **Things to notice:**
 
@@ -81,22 +70,7 @@ A token ID like `373` means nothing by itself. So each token is turned into an *
 - Words with **similar meanings** land **close together**.
 - **Directions** on the map carry meaning too.
 
-```mermaid
-quadrantChart
-    title A 2D sketch of the map of meaning (illustrative)
-    x-axis "Living things" --> "Objects"
-    y-axis "Animals and food" --> "People"
-    cat: [0.15, 0.25]
-    kitten: [0.2, 0.18]
-    dog: [0.28, 0.3]
-    banana: [0.72, 0.2]
-    apple: [0.8, 0.28]
-    laptop: [0.88, 0.12]
-    man: [0.3, 0.68]
-    woman: [0.4, 0.62]
-    king: [0.3, 0.9]
-    queen: [0.4, 0.84]
-```
+![Illustrative 2D map of meaning: cat, kitten and dog cluster together; apple, banana and laptop sit on the objects side; the arrow from man to king is parallel to the arrow from woman to queen](images/03-map-of-meaning.png)
 
 Real output from [`embeddings.py`](embeddings.py), using `gemini-embedding-001` (3,072 numbers per word):
 
@@ -127,14 +101,7 @@ There's a problem: the word **"bank"** gets the same starting embedding in *"riv
 
 Example: *"The animal didn't cross the street because **it** was too tired."* What does **"it"** refer to?
 
-```mermaid
-flowchart LR
-    it(["it"])
-    it == "strong" ==> animal["animal"]
-    it -- "weak" --> street["street"]
-    it -. "tiny" .-> cross["cross"]
-    it -. "tiny" .-> the["The"]
-```
+![Attention from the token 'it': a thick line to 'animal' (strong), a thinner line to 'street' (weak), and faint dashed lines to 'cross' and 'The'](images/04-attention.png)
 
 *Illustrative weights.* "it" pays most attention to "animal", so its meaning shifts towards *the animal*. In *"...because it was too **wide**"*, the later words look back the same way and link "it" to "street" instead.
 
@@ -176,14 +143,7 @@ Step 2: the model's top guesses
    ...
 ```
 
-```mermaid
-flowchart LR
-    S["Text so far"] --> M["LLM"]
-    M --> P["Probabilities<br/>' Paris' 44%<br/>'?' 6%<br/>':' 4% ..."]
-    P --> C["Choose a token"]
-    C --> A["Append it"]
-    A -- "repeat until done" --> S
-```
+![Generation loop: text so far goes into the LLM, which outputs probabilities; a token is chosen and appended, and the loop repeats until done](images/05-generation-loop.png)
 
 **This loop is called autoregressive generation.** It explains a lot:
 
@@ -193,13 +153,7 @@ flowchart LR
 
 ## 7. Where does the knowledge come from?
 
-```mermaid
-flowchart LR
-    D["Trillions of tokens<br/>of text and code"] --> P["Pre-training<br/>predict the next token,<br/>adjust billions of weights"]
-    P --> B["Base model<br/>great at continuing text"]
-    B --> I["Fine-tuning + feedback<br/>follow instructions,<br/>be helpful and safe"]
-    I --> A["Assistant model<br/>Claude, GPT, Gemini"]
-```
+![Training pipeline: trillions of tokens, pre-training, base model, fine-tuning and feedback, assistant model such as Claude, GPT or Gemini](images/06-training.png)
 
 - **Pre-training:** the model sees huge amounts of text, guesses the next token, and nudges its **weights** (billions of numbers) every time it's wrong. Knowledge ends up stored in those weights.
 - **Instruction tuning and human feedback** turn a text-continuer into an assistant that answers questions.
