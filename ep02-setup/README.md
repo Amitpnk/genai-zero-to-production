@@ -70,6 +70,23 @@ Close and reopen your terminal, then check it:
 uv --version
 ```
 
+**Basic uv commands** you'll use throughout the series:
+
+```bash
+uv sync                          # make .venv match uv.lock (run after every git pull)
+uv run python script.py          # run anything inside the project env, no activation needed
+uv add httpx                     # add a package (updates pyproject.toml and uv.lock)
+uv remove httpx                  # remove a package
+uv tree --depth 1                # what does this project depend on?
+uv python install 3.12           # install a Python version (doesn't touch your system Python)
+uv python list --only-installed  # every Python uv can see on this machine
+uvx ruff check .                 # run a tool once without installing it
+```
+
+> **Commit** `pyproject.toml`, `uv.lock` and `.python-version`. **Never commit** `.venv/` (it's in `.gitignore`).
+
+New to uv? See the [uv cheat sheet](../guides/uv/) for every command: projects, Python versions, tools, the cache, and pip-to-uv equivalents.
+
 ## Step 3: Get the code
 
 Clone this repo and install everything:

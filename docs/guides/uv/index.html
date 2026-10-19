@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>uv Cheat Sheet · GenAI Zero to Production</title>
+<meta name="description" content="uv, the fast Python project manager used in this series: install, sync, run, add packages, manage Python versions, run tools with uvx, and pip-to-uv equivalents.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/deck.css">
+<link rel="stylesheet" href="../../assets/guide.css">
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="../../">GenAI <span>Zero to Production</span></a>
+  <nav aria-label="Guide">
+    <a href="https://github.com/Amitpnk/genai-zero-to-production/tree/main/guides/uv">Markdown notes</a>
+    <a href="https://github.com/Amitpnk/genai-zero-to-production">GitHub repo</a>
+  </nav>
+</header>
+
+<main class="guide">
+  <p class="eyebrow">Guide · Python tooling</p>
+  <h1>uv cheat sheet</h1>
+  <p class="intro">One fast tool for Python versions, virtual environments and packages. Introduced in Episode 2 and used in every episode after.</p>
+  <nav class="toc" aria-label="On this page">
+    <a href="#what">What it is</a><a href="#how">How it fits</a><a href="#install">Install</a><a href="#daily">Daily five</a><a href="#commands">All commands</a><a href="#python">Python versions</a><a href="#pip">pip → uv</a><a href="#commit">Commit or not</a><a href="#trouble">Troubleshooting</a>
+  </nav>
+
+  <!-- What -->
+  <h2 id="what">What is uv?</h2>
+  <p class="sub">One tool that replaces <code>pip</code>, <code>venv</code>, <code>pip-tools</code>, <code>pyenv</code> and <code>pipx</code>. Made by Astral, the team behind Ruff.</p>
+  <div class="tablecard">
+    <table>
+      <thead><tr><th scope="col">Job</th><th scope="col">Old way</th><th scope="col">With uv</th></tr></thead>
+      <tbody>
+        <tr><td><b>Install Python versions</b></td><td>pyenv, python.org installer</td><td><code>uv python install 3.12</code></td></tr>
+        <tr><td><b>Create a virtual environment</b></td><td><code>python -m venv .venv</code></td><td>done for you by <code>uv sync</code></td></tr>
+        <tr><td><b>Install packages</b></td><td><code>pip install …</code></td><td><code>uv add …</code></td></tr>
+        <tr><td><b>Pin exact versions</b></td><td><code>pip freeze &gt; requirements.txt</code></td><td><code>uv.lock</code>, automatically</td></tr>
+        <tr><td><b>Run in the environment</b></td><td>activate, then run</td><td><code>uv run …</code>, no activation</td></tr>
+        <tr><td><b>Run a CLI tool once</b></td><td><code>pipx run …</code></td><td><code>uvx …</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="pros">
+    <div><h3>Why this series uses it</h3><ul><li>Much faster than pip</li><li>Installs Python for you, even if your system Python is old</li><li>A lock file: everyone gets identical versions</li></ul></div>
+    <div><h3>Good to know</h3><ul><li>Your system Python is never touched</li><li><code>uv pip …</code> still works for old projects</li><li>No activation: just prefix commands with <code>uv run</code></li></ul></div>
+  </div>
+
+  <!-- How -->
+  <h2 id="how">How a uv project fits together</h2>
+  <p class="sub">You describe what you want; uv pins it, installs it and runs inside it.</p>
+  <div class="flow">
+    <div class="scroll"><svg viewBox="0 0 980 210" role="img" aria-labelledby="uvflow-t">
+      <title id="uvflow-t">uv add writes to pyproject.toml; uv lock resolves exact versions into uv.lock; uv sync makes the .venv folder match the lock file; uv run runs your script inside .venv.</title>
+      <defs><marker id="ua" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#F2994A"/></marker></defs>
+      <g font-family="IBM Plex Sans, sans-serif">
+        <rect x="10" y="40" width="200" height="110" rx="12" fill="#16233A" stroke="#2A3B57"/>
+        <text x="28" y="74" fill="#7AA7F0" font-family="JetBrains Mono, monospace" font-size="15">pyproject.toml</text>
+        <text x="28" y="104" fill="#F5F2EA" font-size="15" font-weight="600">What you need</text>
+        <text x="28" y="128" fill="#B9C2D0" font-size="13">anthropic, openai, …</text>
+        <rect x="265" y="40" width="200" height="110" rx="12" fill="#16233A" stroke="#2A3B57"/>
+        <text x="283" y="74" fill="#7AA7F0" font-family="JetBrains Mono, monospace" font-size="15">uv.lock</text>
+        <text x="283" y="104" fill="#F5F2EA" font-size="15" font-weight="600">Exact versions</text>
+        <text x="283" y="128" fill="#B9C2D0" font-size="13">anthropic==1.15.0, …</text>
+        <rect x="520" y="40" width="200" height="110" rx="12" fill="#16233A" stroke="#2A3B57"/>
+        <text x="538" y="74" fill="#7AA7F0" font-family="JetBrains Mono, monospace" font-size="15">.venv/</text>
+        <text x="538" y="104" fill="#F5F2EA" font-size="15" font-weight="600">Installed packages</text>
+        <text x="538" y="128" fill="#B9C2D0" font-size="13">never commit this</text>
+        <rect x="775" y="40" width="195" height="110" rx="12" fill="#16233A" stroke="#F2994A" stroke-width="2"/>
+        <text x="793" y="74" fill="#F2994A" font-family="JetBrains Mono, monospace" font-size="15">your script</text>
+        <text x="793" y="104" fill="#F5F2EA" font-size="15" font-weight="600">Runs inside .venv</text>
+        <text x="793" y="128" fill="#B9C2D0" font-size="13">no activation</text>
+        <g stroke="#F2994A" stroke-width="2" marker-end="url(#ua)">
+          <line x1="212" y1="95" x2="260" y2="95"/><line x1="467" y1="95" x2="515" y2="95"/><line x1="722" y1="95" x2="770" y2="95"/>
+        </g>
+        <g fill="#F2994A" font-family="JetBrains Mono, monospace" font-size="14" text-anchor="middle">
+          <text x="110" y="25">uv add</text><text x="238" y="180">uv lock</text><text x="493" y="180">uv sync</text><text x="747" y="180">uv run</text>
+        </g>
+      </g>
+    </svg></div>
+    <ul>
+      <li><b>You never edit <code>uv.lock</code> or <code>.venv</code> by hand.</b> uv keeps them in step with <code>pyproject.toml</code>.</li>
+      <li><code>uv run</code> checks everything's in sync first, so it's always safe to use.</li>
+    </ul>
+  </div>
+
+  <!-- Install -->
+  <h2 id="install">1 · Install uv</h2>
+  <p class="sub">Then close and reopen your terminal.</p>
+  <div class="grid">
+    <div class="gcard">
+      <h3>Install</h3>
+      <div class="cmd"><code>curl -LsSf https://astral.sh/uv/install.sh | sh</code><button class="copy" type="button">Copy</button><p>macOS / Linux</p></div>
+      <div class="cmd"><code>powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"</code><button class="copy" type="button">Copy</button><p>Windows (PowerShell)</p></div>
+      <div class="cmd"><code>pip install uv</code><button class="copy" type="button">Copy</button><p>Any OS, if you already have pip</p></div>
+    </div>
+    <div class="gcard">
+      <h3>Check and update</h3>
+      <div class="cmd"><code>uv --version</code><button class="copy" type="button">Copy</button><p>e.g. <code>uv 0.13.1</code></p></div>
+      <div class="cmd"><code>uv self update</code><button class="copy" type="button">Copy</button><p>Update uv (standalone installs)</p></div>
+      <div class="cmd"><code>uv help sync</code><button class="copy" type="button">Copy</button><p>Full help for any command</p></div>
+    </div>
+  </div>
+
+  <!-- Daily -->
+  <h2 id="daily">2 · The five commands you'll use every day</h2>
+  <p class="sub">If you only learn five, learn these.</p>
+  <div class="grid">
+    <div class="gcard hot">
+      <h3>Daily five <span class="tag">start here</span></h3>
+      <div class="cmd"><code>uv sync</code><button class="copy" type="button">Copy</button><p>Make <code>.venv</code> match <code>uv.lock</code>. Run after every <code>git pull</code>.</p></div>
+      <div class="cmd"><code>uv run python script.py</code><button class="copy" type="button">Copy</button><p>Run anything inside the project's environment</p></div>
+      <div class="cmd"><code>uv add httpx</code><button class="copy" type="button">Copy</button><p>Add a package: updates <code>pyproject.toml</code> and <code>uv.lock</code></p></div>
+      <div class="cmd"><code>uv remove httpx</code><button class="copy" type="button">Copy</button><p>Remove a package</p></div>
+      <div class="cmd"><code>uv tree --depth 1</code><button class="copy" type="button">Copy</button><p>What does this project depend on?</p></div>
+    </div>
+    <div class="gcard">
+      <h3>Real output: <code>uv tree --depth 1</code></h3>
+      <pre class="out">genai-zero-to-production v0.1.0
+├── anthropic v1.15.0
+├── boto3 v1.43.114
+├── google-genai v2.31.0
+├── openai v3.35.1
+├── python-dotenv v1.2.4
+├── tiktoken v0.14.0
+├── ipykernel v7.4.0 (group: dev)
+└── ruff v0.17.1 (group: dev)</pre>
+      <p class="note">From this repo. Packages marked <code>group: dev</code> are development-only tools.</p>
+    </div>
+  </div>
+
+  <!-- All commands -->
+  <h2 id="commands">3 · Projects, dependencies and running</h2>
+  <p class="sub">Everything else you'll reach for.</p>
+  <div class="grid">
+    <div class="gcard">
+      <h3>Projects and dependencies</h3>
+      <div class="cmd"><code>uv init my-app --python 3.12</code><button class="copy" type="button">Copy</button><p>New project: pyproject, .python-version, README, .gitignore, src/ and a git repo</p></div>
+      <div class="cmd"><code>uv add "openai&gt;=2,&lt;3"</code><button class="copy" type="button">Copy</button><p>Add with a version range</p></div>
+      <div class="cmd"><code>uv add --dev ruff pytest</code><button class="copy" type="button">Copy</button><p>Development-only tools (the <code>dev</code> group)</p></div>
+      <div class="cmd"><code>uv sync --no-dev</code><button class="copy" type="button">Copy</button><p>Install without dev tools, e.g. in production</p></div>
+      <div class="cmd"><code>uv lock --upgrade-package openai</code><button class="copy" type="button">Copy</button><p>Upgrade one package to its newest allowed version</p></div>
+      <div class="cmd"><code>uv lock --upgrade</code><button class="copy" type="button">Copy</button><p>Upgrade everything, then re-run your tests</p></div>
+      <div class="cmd"><code>uv export --format requirements-txt</code><button class="copy" type="button">Copy</button><p>A <code>requirements.txt</code> for tools that need one</p></div>
+    </div>
+    <div class="gcard">
+      <h3>Running things and tools</h3>
+      <div class="cmd"><code>uv run python</code><button class="copy" type="button">Copy</button><p>A Python shell with the project's packages</p></div>
+      <div class="cmd"><code>uv run --with rich python script.py</code><button class="copy" type="button">Copy</button><p>Add a package for this one run only</p></div>
+      <div class="cmd"><code>uvx ruff check .</code><button class="copy" type="button">Copy</button><p>Run a CLI tool without installing it (<code>uvx</code> = <code>uv tool run</code>)</p></div>
+      <div class="cmd"><code>uv tool install ruff</code><button class="copy" type="button">Copy</button><p>Install a CLI tool permanently, isolated from projects</p></div>
+      <div class="cmd"><code>uv tool list</code><button class="copy" type="button">Copy</button><p>List installed tools</p></div>
+      <div class="cmd"><code>uv cache size --human</code><button class="copy" type="button">Copy</button><p>Disk used by the download cache (e.g. 340.9 MiB)</p></div>
+      <div class="cmd"><code>uv cache clean</code><button class="copy" type="button">Copy</button><p>Clear the cache (safe: packages re-download when needed)</p></div>
+    </div>
+  </div>
+
+  <!-- Python -->
+  <h2 id="python">4 · Python versions</h2>
+  <p class="sub">uv installs Python per user, with no admin rights, and never touches your system Python.</p>
+  <div class="grid">
+    <div class="gcard">
+      <h3>Commands</h3>
+      <div class="cmd"><code>uv python install 3.12</code><button class="copy" type="button">Copy</button><p>Download and install Python 3.12</p></div>
+      <div class="cmd"><code>uv python list --only-installed</code><button class="copy" type="button">Copy</button><p>Every Python uv can see on this machine</p></div>
+      <div class="cmd"><code>uv python pin 3.12</code><button class="copy" type="button">Copy</button><p>Write <code>.python-version</code> so this project uses 3.12</p></div>
+      <div class="cmd"><code>uv python find</code><button class="copy" type="button">Copy</button><p>Which Python would be used here?</p></div>
+    </div>
+    <div class="gcard hot">
+      <h3>Real example: an old system Python</h3>
+      <pre class="out">cpython-3.12.15   ← installed by uv
+cpython-3.8.2     ← old system Python</pre>
+      <p class="note">Both live side by side. <code>python --version</code> still says 3.8.2; <code>uv run python --version</code> says 3.12. Nothing else on the machine changes.</p>
+    </div>
+  </div>
+
+  <!-- pip -->
+  <h2 id="pip">5 · pip and venv habits → uv</h2>
+  <p class="sub">Same jobs, fewer steps.</p>
+  <div class="tablecard">
+    <table>
+      <thead><tr><th scope="col">You used to type</th><th scope="col">Now type</th></tr></thead>
+      <tbody>
+        <tr><td><code>python -m venv .venv</code> + activate</td><td>nothing: <code>uv sync</code> creates <code>.venv</code></td></tr>
+        <tr><td><code>pip install requests</code></td><td><code>uv add requests</code></td></tr>
+        <tr><td><code>pip install -r requirements.txt</code></td><td><code>uv sync</code>, or <code>uv pip install -r requirements.txt</code> in a non-uv project</td></tr>
+        <tr><td><code>pip freeze &gt; requirements.txt</code></td><td>nothing: <code>uv.lock</code> stays up to date</td></tr>
+        <tr><td><code>python script.py</code> (after activating)</td><td><code>uv run python script.py</code></td></tr>
+        <tr><td><code>pipx run black .</code></td><td><code>uvx black .</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Commit -->
+  <h2 id="commit">6 · Commit or not?</h2>
+  <p class="sub">Three files in, one folder out.</p>
+  <div class="tablecard">
+    <table>
+      <thead><tr><th scope="col">File</th><th scope="col">Commit?</th><th scope="col">Why</th></tr></thead>
+      <tbody>
+        <tr><td><code>pyproject.toml</code></td><td><b>Yes</b></td><td>What the project needs</td></tr>
+        <tr><td><code>uv.lock</code></td><td><b>Yes</b></td><td>Everyone gets identical versions</td></tr>
+        <tr><td><code>.python-version</code></td><td><b>Yes</b></td><td>Everyone uses the same Python</td></tr>
+        <tr><td><code>.venv/</code></td><td><b>Never</b></td><td>Machine-specific, large, rebuilt by <code>uv sync</code> (it's in <code>.gitignore</code>)</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="callout"><b>VS Code:</b> run <code>uv sync</code> once, then <code>Ctrl+Shift+P</code> → <b>Python: Select Interpreter</b> → pick the one inside <code>.venv</code>. Red squiggles under imports usually mean the wrong interpreter.</p>
+
+  <!-- Troubleshooting -->
+  <h2 id="trouble">7 · Troubleshooting</h2>
+  <p class="sub">The usual suspects.</p>
+  <div class="tablecard">
+    <table>
+      <thead><tr><th scope="col">Problem</th><th scope="col">Fix</th></tr></thead>
+      <tbody>
+        <tr><td><code>uv</code> not found / not recognized</td><td>Close and reopen the terminal. Still missing? Re-run the installer, or check <code>~/.local/bin</code> is on your <code>PATH</code></td></tr>
+        <tr><td><code>ModuleNotFoundError</code></td><td>Use <code>uv run python …</code>, not plain <code>python …</code>; or run <code>uv sync</code></td></tr>
+        <tr><td><code>python --version</code> shows an old version</td><td>Normal: that's your system Python. <code>uv run python --version</code> shows the project's</td></tr>
+        <tr><td><code>No solution found when resolving dependencies</code></td><td>Conflicting version needs: loosen a range in <code>pyproject.toml</code>, then <code>uv lock</code></td></tr>
+        <tr><td>Out of date after <code>git pull</code></td><td><code>uv sync</code></td></tr>
+        <tr><td>Running out of disk</td><td><code>uv cache clean</code></td></tr>
+        <tr><td>Corporate proxy or certificate errors</td><td>Set <code>UV_NATIVE_TLS=1</code> to use your system's certificates, or set <code>HTTPS_PROXY</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="gcard" style="margin-top:14px">
+    <h3>Clean start (safe: <code>.venv</code> is rebuilt from <code>uv.lock</code>)</h3>
+    <div class="codewrap"><button class="copy" type="button">Copy</button><pre class="code">rm -rf .venv          # Windows PowerShell: Remove-Item -Recurse -Force .venv
+uv sync</pre></div>
+  </div>
+
+  <footer>Amit · Generative AI &amp; Agentic AI Instructor · Checked against uv 0.13.1</footer>
+</main>
+
+<script src="../../assets/guide.js"></script>
+</body>
+</html>

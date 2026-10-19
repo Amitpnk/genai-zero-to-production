@@ -1,0 +1,63 @@
+/* Shared styles for the guide pages (Ollama, uv, ...). Loaded after deck.css. */
+
+.guide { width: min(100% - 32px, 1080px); margin: 0 auto; padding: 56px 0 80px; }
+.guide .eyebrow { font-size: 13px; letter-spacing: .25em; text-transform: uppercase; color: var(--orange); margin: 0 0 16px; }
+.guide h1 { font: 700 clamp(34px, 5.5vw, 56px)/1.08 var(--head); letter-spacing: -.02em; margin: 0 0 16px; }
+.guide .intro { font-size: 18px; line-height: 1.6; color: var(--mist); max-width: 42em; margin: 0 0 28px; }
+.guide h2 { font: 700 26px var(--head); margin: 56px 0 8px; scroll-margin-top: 80px; }
+.guide h2 + .sub { color: var(--mist); margin: 0 0 20px; font-size: 16px; line-height: 1.55; }
+.guide h3 { font: 600 17px var(--body); margin: 0 0 12px; }
+
+.toc { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+.toc a { font-size: 14px; text-decoration: none; color: var(--mist); border: 1px solid var(--line-dark); border-radius: 999px; padding: 6px 12px; }
+.toc a:hover { color: var(--cream); border-color: var(--mist); }
+
+.pros { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 20px; }
+.pros div { background: var(--ink); border: 1px solid #1A2840; border-radius: 12px; padding: 18px 20px; }
+.pros h3 { color: var(--orange); }
+.pros ul { margin: 0; padding-left: 18px; color: var(--mist); line-height: 1.8; font-size: 15px; }
+
+.flow { background: var(--ink); border: 1px solid #1A2840; border-radius: 12px; padding: 20px; margin-top: 16px; }
+.flow svg { width: 100%; height: auto; display: block; }
+.flow .scroll { overflow-x: auto; }
+.flow ul { margin: 14px 0 0; padding-left: 18px; color: var(--mist); line-height: 1.8; font-size: 15px; }
+.flow b { color: var(--cream); }
+
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 480px), 1fr)); gap: 14px; }
+.gcard { background: var(--ink); border: 1px solid #1A2840; border-radius: 12px; padding: 18px 20px; }
+.gcard.hot { border-color: var(--orange); }
+.gcard h3 .tag { font: 500 11px var(--mono); color: var(--ink); background: var(--orange); border-radius: 4px; padding: 2px 6px; margin-left: 6px; vertical-align: 2px; }
+
+.cmd { display: grid; grid-template-columns: 1fr auto; gap: 4px 10px; align-items: center; padding: 10px 0; border-top: 1px solid #16233A; }
+.cmd:first-of-type { border-top: 0; }
+.cmd code { font: 14px var(--mono); color: var(--cream); background: #0A111D; border-radius: 6px; padding: 6px 9px; overflow-x: auto; white-space: nowrap; }
+.cmd p { grid-column: 1 / -1; margin: 0; font-size: 14px; color: var(--mist); line-height: 1.5; }
+.copy { font: 12px var(--body); color: var(--mist); background: transparent; border: 1px solid var(--line-dark); border-radius: 6px; padding: 5px 9px; cursor: pointer; }
+.copy:hover { color: var(--cream); border-color: var(--mist); }
+.copy:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+.copy.done { color: var(--ink); background: var(--orange); border-color: var(--orange); }
+
+pre.out { margin: 12px 0 0; font: 13px/1.6 var(--mono); color: var(--mist); background: #0A111D; border-radius: 8px; padding: 12px 14px; overflow-x: auto; }
+pre.code { margin: 0; font: 13.5px/1.65 var(--mono); color: var(--cream); background: #0A111D; border-radius: 8px; padding: 14px 16px; overflow-x: auto; }
+.codewrap { position: relative; }
+.codewrap .copy { position: absolute; top: 8px; right: 8px; background: var(--ink); }
+
+table { width: 100%; border-collapse: collapse; font-size: 15px; }
+th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid #16233A; vertical-align: top; line-height: 1.5; }
+th { color: var(--mist); font-weight: 500; font-size: 13px; letter-spacing: .04em; text-transform: uppercase; }
+td code { font: 13px var(--mono); background: #0A111D; border-radius: 4px; padding: 2px 6px; }
+td b { color: var(--cream); }
+.tablecard { background: var(--ink); border: 1px solid #1A2840; border-radius: 12px; padding: 8px 12px; overflow-x: auto; }
+.tablecard table { min-width: 560px; }
+.measured { color: var(--orange); font-weight: 600; }
+.note { font-size: 14px; color: var(--mist); margin-top: 10px; line-height: 1.55; }
+.callout { margin-top: 14px; border-left: 3px solid var(--orange); background: var(--ink); border-radius: 0 8px 8px 0; padding: 12px 16px; color: var(--mist); font-size: 15px; line-height: 1.55; }
+.callout b { color: var(--cream); }
+details { margin-top: 12px; }
+summary { cursor: pointer; color: var(--mist); font-size: 14px; }
+summary:hover { color: var(--cream); }
+.guide footer { margin-top: 56px; color: #8893A6; font-size: 14px; }
+@media (max-width: 640px) { .flow svg { min-width: 640px; } .pros { grid-template-columns: 1fr; } .guide { padding-top: 32px; } }
+
+/* Show code exactly as typed: no ">=" to "≥" ligatures. */
+.guide code, .guide pre { font-variant-ligatures: none; }
