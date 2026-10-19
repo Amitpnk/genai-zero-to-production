@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AWS CLI and Bedrock setup · GenAI Zero to Production</title>
+<meta name="description" content="Get from &quot;I have an AWS account&quot; to a working Bedrock call: install the AWS CLI, sign in with a profile, pick a region, enable model access, and fix the usual errors.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/deck.css">
+<link rel="stylesheet" href="../../assets/guide.css">
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="../../">GenAI <span>Zero to Production</span></a>
+  <nav aria-label="Guide">
+    <a href="../">All guides</a>
+    <a href="https://github.com/Amitpnk/genai-zero-to-production/tree/main/guides/aws-bedrock">Markdown notes</a>
+    <a href="https://github.com/Amitpnk/genai-zero-to-production">GitHub repo</a>
+  </nav>
+</header>
+
+<main class="guide">
+  <p class="eyebrow">Guide · Draft</p>
+  <h1>AWS CLI and Bedrock setup</h1>
+  <p class="intro">Get from "I have an AWS account" to a working Bedrock call: install the AWS CLI, sign in with a profile, pick a region, enable model access, and fix the usual errors.</p>
+  <nav class="toc" aria-label="On this page"><a href="#the-big-picture">The big picture</a><a href="#1-install-the-aws-cli-v2">1. Install the AWS CLI (v2)</a><a href="#2-sign-in-with-a-named-profile">2. Sign in with a named profile</a><a href="#3-pick-a-region-and-check-model-access">3. Pick a region and check model access</a><a href="#4-minimum-iam-permissions">4. Minimum IAM permissions</a><a href="#5-test-it">5. Test it</a><a href="#troubleshooting">Troubleshooting</a><a href="#useful-commands">Useful commands</a></nav>
+
+<p class="callout"><strong>Draft</strong> · Used in Episode 2 and Module 10 · Not run live while drafting (no AWS profile on the build machine); commands follow the AWS CLI v2 docs.</p>
+<h2 id="the-big-picture">The big picture</h2>
+<div class="codewrap"><button class="copy" type="button">Copy</button><pre class="code">Your code (boto3)  ──uses──▶  AWS profile "genai-course"  ──signs requests──▶  Bedrock (in one region)
+                                (SSO or access keys)                            └─ only models you've enabled</pre></div>
+<p>Three things must line up: <strong>who you are</strong> (profile), <strong>where</strong> (region) and <strong>what you're allowed to call</strong> (model access + IAM).</p>
+<h2 id="1-install-the-aws-cli-v2">1. Install the AWS CLI (v2)</h2>
+<div class="tablecard"><table>
+<thead>
+<tr>
+<th>OS</th>
+<th>How</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Windows</strong></td>
+<td>Download the MSI from the <a href="https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html">AWS CLI install guide</a>, or <code>winget install Amazon.AWSCLI</code></td>
+</tr>
+<tr>
+<td><strong>macOS</strong></td>
+<td>The <code>.pkg</code> installer from the same page, or <code>brew install awscli</code></td>
+</tr>
+<tr>
+<td><strong>Linux</strong></td>
+<td>The zip installer from the same page</td>
+</tr>
+</tbody>
+</table></div>
+<div class="codewrap"><button class="copy" type="button">Copy</button><pre class="code">aws --version          # aws-cli/2.x.x ...</pre></div>
+<h2 id="2-sign-in-with-a-named-profile">2. Sign in with a named profile</h2>
+<p>This course uses a profile called <strong><code>genai-course</code></strong>, matching <code>AWS_PROFILE</code> in <code>.env</code>.</p>
+<p><strong>Option A: IAM Identity Center / SSO (recommended)</strong>: short-lived credentials, nothing secret stored long-term.</p>
+<div class="codewrap"><button class="copy" type="button">Copy</button><pre class="code">aws configure sso --profile genai-course       # follow the prompts (start URL, region, account, role)
+aws sso login --profile genai-course           # run again whenever the session expires</pre></div>
+<p><strong>Option B: access keys (personal dev account only)</strong></p>
+<div class="codewrap"><button class="copy" type="button">Copy</button><pre class="code">aws configure --profile genai-course           # paste access key ID + secret, set region</pre></div>
+<p class="callout">Prefer SSO. If you must use access keys: an IAM user with Bedrock-only permissions, never your root account, and never commit the keys.</p>
+<p><strong>Check who you are:</strong></p>
+<div class="codewrap"><button class="copy" type="button">Copy</button><pre class="code">aws sts get-caller-identity --profile genai-course</pre></div>
+<h2 id="3-pick-a-region-and-check-model-access">3. Pick a region and check model access</h2>
+<ul>
+<li>Bedrock isn't in every region, and <strong>each region has its own model list</strong>. This course uses <code>us-east-1</code>.</li>
+<li>Open the <strong>Bedrock console → Model access</strong> (or the model catalog) in that region and make sure the models you want are available to your account. Some providers ask for a one-time use-case form.</li>
+<li>Copy the <strong>model ID</strong> (or <strong>inference profile ID</strong>, often starting with a region prefix like <code>us.</code>) into <code>.env</code> as <code>BEDROCK_MODEL_ID</code>.</li>
+</ul>
+<p>List what you can see from the command line:</p>
+<div class="codewrap"><button class="copy" type="button">Copy</button><pre class="code">aws bedrock list-foundation-models --region us-east-1 --profile genai-course \
+    --query "modelSummaries[].modelId" --output table</pre></div>
+<h2 id="4-minimum-iam-permissions">4. Minimum IAM permissions</h2>
+<p>For calling models, the role or user needs at least:</p>
+<div class="codewrap"><button class="copy" type="button">Copy</button><pre class="code">{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Effect": "Allow",
+    "Action": ["bedrock:InvokeModel", "bedrock:InvokeModelWithResponseStream"],
+    "Resource": "*"
+  }]
+}</pre></div>
+<p>The Converse API is authorised through these same <code>InvokeModel</code> actions. Tighten <code>Resource</code> to specific model ARNs for production.</p>
+<h2 id="5-test-it">5. Test it</h2>
+<div class="codewrap"><button class="copy" type="button">Copy</button><pre class="code">uv run python ep02-setup/hello_bedrock.py</pre></div>
+<h2 id="troubleshooting">Troubleshooting</h2>
+<div class="tablecard"><table>
+<thead>
+<tr>
+<th>Error</th>
+<th>Cause</th>
+<th>Fix</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>The config profile (genai-course) could not be found</code></td>
+<td>Profile not created, or a typo</td>
+<td><code>aws configure sso --profile genai-course</code>; check <code>AWS_PROFILE</code> in <code>.env</code></td>
+</tr>
+<tr>
+<td><code>Token has expired</code> / <code>SSO session ... expired</code></td>
+<td>SSO sessions last hours</td>
+<td><code>aws sso login --profile genai-course</code></td>
+</tr>
+<tr>
+<td><code>UnrecognizedClientException</code></td>
+<td>Bad or deleted access keys</td>
+<td>Re-run <code>aws configure --profile genai-course</code></td>
+</tr>
+<tr>
+<td><code>AccessDeniedException</code></td>
+<td>No model access, or IAM missing <code>bedrock:InvokeModel</code></td>
+<td>Enable the model in the console; check IAM</td>
+</tr>
+<tr>
+<td><code>ValidationException: ... model identifier is invalid</code></td>
+<td>Wrong model ID, or the model needs an <strong>inference profile</strong> ID</td>
+<td>Copy the exact ID from the catalog in your region</td>
+</tr>
+<tr>
+<td><code>ResourceNotFoundException</code> / model not found</td>
+<td>Model not offered in this region</td>
+<td>Switch region or model</td>
+</tr>
+<tr>
+<td><code>ThrottlingException</code></td>
+<td>Too many requests</td>
+<td>Back off and retry (<a href="../api-errors/">API errors guide</a>)</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="useful-commands">Useful commands</h2>
+<div class="codewrap"><button class="copy" type="button">Copy</button><pre class="code">aws configure list-profiles                      # which profiles exist?
+aws configure list --profile genai-course        # what does this profile use?
+aws sso logout                                   # end SSO sessions
+aws sts get-caller-identity --profile genai-course</pre></div>
+<p class="callout">Never paste account IDs or keys into screenshots, issues or videos. Blur them.</p>
+  <footer>Amit · Generative AI &amp; Agentic AI Instructor · Generated from <a href="https://github.com/Amitpnk/genai-zero-to-production/tree/main/guides/aws-bedrock">the Markdown notes</a></footer>
+</main>
+
+<script src="../../assets/guide.js"></script>
+</body>
+</html>

@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Jupyter notebooks with uv · GenAI Zero to Production</title>
+<meta name="description" content="Use notebooks for quick experiments, with the project&#x27;s .venv as the kernel so every course package is available.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/deck.css">
+<link rel="stylesheet" href="../../assets/guide.css">
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="../../">GenAI <span>Zero to Production</span></a>
+  <nav aria-label="Guide">
+    <a href="../">All guides</a>
+    <a href="https://github.com/Amitpnk/genai-zero-to-production/tree/main/guides/jupyter">Markdown notes</a>
+    <a href="https://github.com/Amitpnk/genai-zero-to-production">GitHub repo</a>
+  </nav>
+</header>
+
+<main class="guide">
+  <p class="eyebrow">Guide · Draft</p>
+  <h1>Jupyter notebooks with uv</h1>
+  <p class="intro">Use notebooks for quick experiments, with the project's <code>.venv</code> as the kernel so every course package is available.</p>
+  <nav class="toc" aria-label="On this page"><a href="#option-a-notebooks-inside-vs-code-recommended">Option A: notebooks inside VS Code (recommended)</a><a href="#option-b-jupyterlab-in-the-browser">Option B: JupyterLab in the browser</a><a href="#loading-env-in-a-notebook">Loading .env in a notebook</a><a href="#good-notebook-habits">Good notebook habits</a><a href="#troubleshooting">Troubleshooting</a></nav>
+
+<p class="callout"><strong>Draft</strong> · Useful from Module 3 onwards · <code>ipykernel</code> is already in this repo's dev dependencies.</p>
+<h2 id="option-a-notebooks-inside-vs-code-recommended">Option A: notebooks inside VS Code (recommended)</h2>
+<ol>
+<li>Make sure the environment exists (this installs <code>ipykernel</code> from the dev group):
+    <div class="codewrap"><button class="copy" type="button">Copy</button><pre class="code">uv sync</pre></div></li>
+<li>Install the <strong>Jupyter</strong> extension in VS Code (it's in <code>.vscode/extensions.json</code>).</li>
+<li>Create a file ending in <code>.ipynb</code>, or <code>Ctrl+Shift+P</code> → <strong>Create: New Jupyter Notebook</strong>.</li>
+<li>Click <strong>Select Kernel</strong> (top right) → <strong>Python Environments</strong> → pick the one in <strong><code>.venv</code></strong>.</li>
+<li>Run a cell:
+    <div class="codewrap"><button class="copy" type="button">Copy</button><pre class="code">import anthropic, openai, google.genai, tiktoken
+print("course packages ready")</pre></div></li>
+</ol>
+<h2 id="option-b-jupyterlab-in-the-browser">Option B: JupyterLab in the browser</h2>
+<p>Run JupyterLab without adding it to the project:</p>
+<div class="codewrap"><button class="copy" type="button">Copy</button><pre class="code">uv run --with jupyter jupyter lab</pre></div>
+<p><code>uv run</code> makes the project's packages available, and <code>--with jupyter</code> adds JupyterLab just for this session.</p>
+<h2 id="loading-env-in-a-notebook">Loading <code>.env</code> in a notebook</h2>
+<p>Notebooks don't load <code>.env</code> automatically. Put this in the first cell:</p>
+<div class="codewrap"><button class="copy" type="button">Copy</button><pre class="code">from dotenv import load_dotenv
+load_dotenv()          # finds .env in the repo root</pre></div>
+<h2 id="good-notebook-habits">Good notebook habits</h2>
+<div class="tablecard"><table>
+<thead>
+<tr>
+<th>Do</th>
+<th>Why</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Restart and run all</strong> before trusting a result</td>
+<td>Cells run out of order hide bugs</td>
+</tr>
+<tr>
+<td>Keep notebooks for <strong>exploring</strong>; move working code into <code>.py</code> files</td>
+<td>Scripts are easier to test, review and reuse</td>
+</tr>
+<tr>
+<td><strong>Clear outputs</strong> before committing</td>
+<td>Outputs bloat Git and can contain data or keys</td>
+</tr>
+<tr>
+<td>Never print API keys</td>
+<td>Outputs are saved inside the <code>.ipynb</code> file</td>
+</tr>
+</tbody>
+</table></div>
+<p><code>.ipynb_checkpoints/</code> is already in <code>.gitignore</code>.</p>
+<h2 id="troubleshooting">Troubleshooting</h2>
+<div class="tablecard"><table>
+<thead>
+<tr>
+<th>Problem</th>
+<th>Fix</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>.venv</code> doesn't appear as a kernel</td>
+<td>Run <code>uv sync</code>; reload VS Code; check <code>ipykernel</code> is installed (<code>uv tree</code>)</td>
+</tr>
+<tr>
+<td><code>ModuleNotFoundError</code> in a notebook</td>
+<td>Wrong kernel selected: pick the <code>.venv</code> one</td>
+</tr>
+<tr>
+<td><code>KeyError</code> for an env variable</td>
+<td>Add <code>load_dotenv()</code> in the first cell</td>
+</tr>
+<tr>
+<td>Kernel keeps dying</td>
+<td>Out of memory: restart the kernel, or use smaller data or models</td>
+</tr>
+</tbody>
+</table></div>
+  <footer>Amit · Generative AI &amp; Agentic AI Instructor · Generated from <a href="https://github.com/Amitpnk/genai-zero-to-production/tree/main/guides/jupyter">the Markdown notes</a></footer>
+</main>
+
+<script src="../../assets/guide.js"></script>
+</body>
+</html>

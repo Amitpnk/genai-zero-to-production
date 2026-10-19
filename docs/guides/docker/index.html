@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Docker for Python AI apps · GenAI Zero to Production</title>
+<meta name="description" content="Package a uv-based Python app into a container so it runs the same everywhere: your laptop, CI and AWS (ECS Fargate in Module 10).">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/deck.css">
+<link rel="stylesheet" href="../../assets/guide.css">
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="../../">GenAI <span>Zero to Production</span></a>
+  <nav aria-label="Guide">
+    <a href="../">All guides</a>
+    <a href="https://github.com/Amitpnk/genai-zero-to-production/tree/main/guides/docker">Markdown notes</a>
+    <a href="https://github.com/Amitpnk/genai-zero-to-production">GitHub repo</a>
+  </nav>
+</header>
+
+<main class="guide">
+  <p class="eyebrow">Guide · Draft</p>
+  <h1>Docker for Python AI apps</h1>
+  <p class="intro">Package a uv-based Python app into a container so it runs the same everywhere: your laptop, CI and AWS (ECS Fargate in Module 10).</p>
+  <nav class="toc" aria-label="On this page"><a href="#key-ideas">Key ideas</a><a href="#a-dockerfile-for-a-uv-project">A Dockerfile for a uv project</a><a href="#dockerignore-just-as-important">.dockerignore (just as important)</a><a href="#build-and-run">Build and run</a><a href="#useful-commands">Useful commands</a><a href="#secrets-in-production">Secrets in production</a></nav>
+
+<p class="callout"><strong>Draft</strong> · Preview of Module 10 (Production on AWS) · Dockerfile pattern follows uv's documented Docker integration; will be built and tested in Module 10.</p>
+<h2 id="key-ideas">Key ideas</h2>
+<div class="tablecard"><table>
+<thead>
+<tr>
+<th>Term</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Image</strong></td>
+<td>A packaged, read-only snapshot of your app and everything it needs</td>
+</tr>
+<tr>
+<td><strong>Container</strong></td>
+<td>A running instance of an image</td>
+</tr>
+<tr>
+<td><strong>Dockerfile</strong></td>
+<td>The recipe that builds an image</td>
+</tr>
+<tr>
+<td><strong>Registry</strong></td>
+<td>Where images are stored (Docker Hub, Amazon ECR)</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="a-dockerfile-for-a-uv-project">A Dockerfile for a uv project</h2>
+<div class="codewrap"><button class="copy" type="button">Copy</button><pre class="code">FROM python:3.12-slim
+
+# Bring in uv (pin a version you've tested)
+COPY --from=ghcr.io/astral-sh/uv:0.13.1 /uv /uvx /bin/
+
+WORKDIR /app
+
+# 1) Install dependencies first (cached unless pyproject/uv.lock change)
+COPY pyproject.toml uv.lock ./
+RUN uv sync --frozen --no-dev --no-install-project
+
+# 2) Then copy the app code
+COPY . .
+RUN uv sync --frozen --no-dev
+
+# Run as a non-root user
+RUN useradd --create-home app
+USER app
+
+CMD ["uv", "run", "--no-sync", "python", "app.py"]</pre></div>
+<ul>
+<li><code>--frozen</code> uses <code>uv.lock</code> exactly, and fails if it's out of date: reproducible builds.</li>
+<li>Copying <code>pyproject.toml</code> + <code>uv.lock</code> <strong>before</strong> the code means dependency installs are cached between builds.</li>
+<li><code>--no-dev</code> leaves out notebooks, linters and test tools.</li>
+</ul>
+<h2 id="dockerignore-just-as-important">.dockerignore (just as important)</h2>
+<div class="codewrap"><button class="copy" type="button">Copy</button><pre class="code">.env
+.venv/
+__pycache__/
+.git/
+_content/
+*.ipynb
+.ipynb_checkpoints/</pre></div>
+<p class="callout"><strong>Never bake secrets into an image.</strong> <code>.env</code> must be in <code>.dockerignore</code>. Pass keys at runtime instead.</p>
+<h2 id="build-and-run">Build and run</h2>
+<div class="codewrap"><button class="copy" type="button">Copy</button><pre class="code">docker build -t genai-app .
+docker run --rm --env-file .env genai-app          # keys come from .env at runtime, not in the image
+docker run --rm -p 8000:8000 --env-file .env genai-app   # for a web API on port 8000</pre></div>
+<h2 id="useful-commands">Useful commands</h2>
+<div class="tablecard"><table>
+<thead>
+<tr>
+<th>Command</th>
+<th>What it does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>docker ps</code></td>
+<td>Running containers</td>
+</tr>
+<tr>
+<td><code>docker logs -f &lt;container&gt;</code></td>
+<td>Follow a container's output</td>
+</tr>
+<tr>
+<td><code>docker exec -it &lt;container&gt; sh</code></td>
+<td>Open a shell inside it</td>
+</tr>
+<tr>
+<td><code>docker images</code></td>
+<td>Images on this machine</td>
+</tr>
+<tr>
+<td><code>docker system prune</code></td>
+<td>Clean up unused images and containers</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="secrets-in-production">Secrets in production</h2>
+<p>On AWS, keep keys in <strong>Secrets Manager</strong> or <strong>SSM Parameter Store</strong> and inject them as environment variables at runtime; better still, use an <strong>IAM role</strong> so Bedrock calls need no keys at all (Module 10).</p>
+  <footer>Amit · Generative AI &amp; Agentic AI Instructor · Generated from <a href="https://github.com/Amitpnk/genai-zero-to-production/tree/main/guides/docker">the Markdown notes</a></footer>
+</main>
+
+<script src="../../assets/guide.js"></script>
+</body>
+</html>

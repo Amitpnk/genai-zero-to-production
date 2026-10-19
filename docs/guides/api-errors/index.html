@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>API errors and rate limits · GenAI Zero to Production</title>
+<meta name="description" content="What 400, 401, 403, 404, 429 and 5xx errors mean when calling LLM APIs, which ones to retry, and how to retry safely.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/deck.css">
+<link rel="stylesheet" href="../../assets/guide.css">
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="../../">GenAI <span>Zero to Production</span></a>
+  <nav aria-label="Guide">
+    <a href="../">All guides</a>
+    <a href="https://github.com/Amitpnk/genai-zero-to-production/tree/main/guides/api-errors">Markdown notes</a>
+    <a href="https://github.com/Amitpnk/genai-zero-to-production">GitHub repo</a>
+  </nav>
+</header>
+
+<main class="guide">
+  <p class="eyebrow">Guide · Draft</p>
+  <h1>API errors and rate limits</h1>
+  <p class="intro">What 400, 401, 403, 404, 429 and 5xx errors mean when calling LLM APIs, which ones to retry, and how to retry safely.</p>
+  <nav class="toc" aria-label="On this page"><a href="#the-one-rule">The one rule</a><a href="#status-codes-at-a-glance">Status codes at a glance</a><a href="#real-429s-from-this-course">Real 429s from this course</a><a href="#kinds-of-limits">Kinds of limits</a><a href="#retry-with-exponential-backoff-and-jitter">Retry with exponential backoff and jitter</a><a href="#avoid-hitting-limits-in-the-first-place">Avoid hitting limits in the first place</a><a href="#provider-specific-errors">Provider-specific errors</a></nav>
+
+<p class="callout"><strong>Draft</strong> · Used in every episode · The 429 examples are real errors hit while building Episodes 3–6.</p>
+<h2 id="the-one-rule">The one rule</h2>
+<p class="callout"><strong>Retry the temporary errors (429, 5xx, timeouts). Fix the permanent ones (400, 401, 403, 404).</strong> Retrying a bad key just wastes time.</p>
+<h2 id="status-codes-at-a-glance">Status codes at a glance</h2>
+<div class="tablecard"><table>
+<thead>
+<tr>
+<th>Code</th>
+<th>Meaning</th>
+<th>Retry?</th>
+<th>Usual fix</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>400</strong></td>
+<td>Bad request: invalid parameter, prompt too long, bad JSON</td>
+<td>❌</td>
+<td>Read the message; fix the request</td>
+</tr>
+<tr>
+<td><strong>401</strong></td>
+<td>Not authenticated: missing or wrong key</td>
+<td>❌</td>
+<td>Check <code>.env</code>; is the key revoked?</td>
+</tr>
+<tr>
+<td><strong>403</strong></td>
+<td>Authenticated, but not allowed</td>
+<td>❌</td>
+<td>Model access, IAM permission, or region</td>
+</tr>
+<tr>
+<td><strong>404</strong></td>
+<td>Model or endpoint not found</td>
+<td>❌</td>
+<td>Check the model ID; it may be retired or not available to you</td>
+</tr>
+<tr>
+<td><strong>408 / timeout</strong></td>
+<td>Took too long</td>
+<td>✅</td>
+<td>Retry; consider streaming or a smaller request</td>
+</tr>
+<tr>
+<td><strong>429</strong></td>
+<td>Rate limit or quota exceeded</td>
+<td>✅ (with backoff)</td>
+<td>Slow down, wait, or raise your limit</td>
+</tr>
+<tr>
+<td><strong>500 / 502 / 503 / 529</strong></td>
+<td>Provider-side problem or overloaded</td>
+<td>✅ (with backoff)</td>
+<td>Retry; fall back to another model if it persists</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="real-429s-from-this-course">Real 429s from this course</h2>
+<p><strong>Daily free-tier quota used up</strong> (Gemini, while testing Episodes 3–6):</p>
+<div class="codewrap"><button class="copy" type="button">Copy</button><pre class="code">429 RESOURCE_EXHAUSTED ... Quota exceeded for metric:
+generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 20, model: gemini-3.8-flash
+Please retry in 7h50m</pre></div>
+<p><strong>Model not on the free tier at all</strong> (Gemini Pro): also <code>429 RESOURCE_EXHAUSTED</code>. Retrying never helps here: you need billing or a different model.</p>
+<p class="callout"><strong>Read the message, not just the code.</strong> A per-minute rate limit clears in seconds; a daily quota or a "no free tier" limit doesn't. Many providers include a <code>Retry-After</code> header or a retry delay in the error.</p>
+<h2 id="kinds-of-limits">Kinds of limits</h2>
+<div class="tablecard"><table>
+<thead>
+<tr>
+<th>Limit</th>
+<th>Example</th>
+<th>What it means</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Requests per minute (RPM)</strong></td>
+<td>15 requests/minute</td>
+<td>Too many calls too fast</td>
+</tr>
+<tr>
+<td><strong>Tokens per minute (TPM)</strong></td>
+<td>1M input tokens/minute</td>
+<td>Big prompts hit this before RPM</td>
+</tr>
+<tr>
+<td><strong>Requests per day (RPD)</strong></td>
+<td>20 requests/day (free tier)</td>
+<td>Resets daily, not in seconds</td>
+</tr>
+<tr>
+<td><strong>Spend limit</strong></td>
+<td>$50/month cap</td>
+<td>Calls fail until the next period or you raise it</td>
+</tr>
+</tbody>
+</table></div>
+<p>Limits are usually <strong>per model</strong> and depend on your <strong>tier</strong> (free, paid, higher usage tiers). Check each provider's rate-limit page.</p>
+<h2 id="retry-with-exponential-backoff-and-jitter">Retry with exponential backoff and jitter</h2>
+<p>Wait longer after each failure (1 s, 2 s, 4 s…), plus a little randomness so many clients don't retry at the same moment:</p>
+<div class="codewrap"><button class="copy" type="button">Copy</button><pre class="code">import random
+import time
+
+RETRYABLE = {408, 429, 500, 502, 503, 504, 529}
+
+
+def call_with_retries(make_call, max_attempts=5):
+    for attempt in range(max_attempts):
+        try:
+            return make_call()
+        except Exception as error:
+            status = getattr(error, "status_code", None) or getattr(error, "code", None)
+            if status not in RETRYABLE or attempt == max_attempts - 1:
+                raise                                   # permanent error, or out of attempts
+            delay = min(2 ** attempt, 30) + random.uniform(0, 1)
+            print(f"Got {status}, retrying in {delay:.1f}s...")
+            time.sleep(delay)</pre></div>
+<p>Usage: <code>call_with_retries(lambda: client.models.generate_content(model=..., contents=...))</code></p>
+<p><strong>Built-in retries:</strong> the Anthropic and OpenAI SDKs already retry connection errors, 408, 409, 429 and 5xx twice by default (<code>max_retries=</code> to change). Don't stack your own retry loop on top without thinking about the total wait.</p>
+<p class="callout">For production, the <code>tenacity</code> package gives you retries, backoff and jitter as a decorator.</p>
+<h2 id="avoid-hitting-limits-in-the-first-place">Avoid hitting limits in the first place</h2>
+<ul>
+<li><strong>Cache</strong> answers to repeated questions.</li>
+<li><strong>Batch</strong> work instead of firing hundreds of calls at once; providers offer cheaper <strong>batch APIs</strong> for non-urgent jobs.</li>
+<li>Use <strong>smaller prompts and smaller models</strong> where they pass your tests (<a href="https://github.com/Amitpnk/genai-zero-to-production/tree/main/ep06-model-landscape">Episode 6</a>).</li>
+<li><strong>Limit concurrency</strong>: a queue with a few workers beats 100 parallel requests.</li>
+<li><strong>Fallback:</strong> if the main model is overloaded, try a second model or provider.</li>
+</ul>
+<h2 id="provider-specific-errors">Provider-specific errors</h2>
+<div class="tablecard"><table>
+<thead>
+<tr>
+<th></th>
+<th>Rate limited</th>
+<th>Overloaded</th>
+<th>Bad key</th>
+<th>No access</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Anthropic</strong></td>
+<td><code>rate_limit_error</code> (429)</td>
+<td><code>overloaded_error</code> (529)</td>
+<td><code>authentication_error</code> (401)</td>
+<td><code>permission_error</code> (403), <code>not_found_error</code> (404)</td>
+</tr>
+<tr>
+<td><strong>OpenAI</strong></td>
+<td><code>rate_limit_exceeded</code> / <code>insufficient_quota</code> (429)</td>
+<td>500 / 503</td>
+<td><code>invalid_api_key</code> (401)</td>
+<td><code>model_not_found</code> (404)</td>
+</tr>
+<tr>
+<td><strong>Gemini</strong></td>
+<td><code>RESOURCE_EXHAUSTED</code> (429)</td>
+<td><code>UNAVAILABLE</code> (503)</td>
+<td><code>API key not valid</code> (400)</td>
+<td><code>NOT_FOUND</code> (404)</td>
+</tr>
+<tr>
+<td><strong>Bedrock</strong></td>
+<td><code>ThrottlingException</code></td>
+<td><code>ServiceUnavailableException</code>, <code>ModelNotReadyException</code></td>
+<td><code>UnrecognizedClientException</code>, expired SSO token</td>
+<td><code>AccessDeniedException</code></td>
+</tr>
+<tr>
+<td><strong>Ollama</strong></td>
+<td>(none: local)</td>
+<td>slow, not an error</td>
+<td>(none)</td>
+<td><code>model not found</code> → <code>ollama pull</code></td>
+</tr>
+</tbody>
+</table></div>
+<p class="callout"><code>insufficient_quota</code> from OpenAI means <strong>out of credit</strong>, not "too fast": add billing rather than retrying.</p>
+  <footer>Amit · Generative AI &amp; Agentic AI Instructor · Generated from <a href="https://github.com/Amitpnk/genai-zero-to-production/tree/main/guides/api-errors">the Markdown notes</a></footer>
+</main>
+
+<script src="../../assets/guide.js"></script>
+</body>
+</html>

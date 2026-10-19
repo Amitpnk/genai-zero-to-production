@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LLM provider cheat sheet · GenAI Zero to Production</title>
+<meta name="description" content="The same jobs in Anthropic, OpenAI, Google Gemini, AWS Bedrock and Ollama: install, sign in, first call, system prompts, streaming, chat, parameters and errors.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/deck.css">
+<link rel="stylesheet" href="../../assets/guide.css">
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="../../">GenAI <span>Zero to Production</span></a>
+  <nav aria-label="Guide">
+    <a href="../">All guides</a>
+    <a href="https://github.com/Amitpnk/genai-zero-to-production/tree/main/guides/llm-providers">Markdown notes</a>
+    <a href="https://github.com/Amitpnk/genai-zero-to-production">GitHub repo</a>
+  </nav>
+</header>
+
+<main class="guide">
+  <p class="eyebrow">Guide · Draft</p>
+  <h1>LLM provider cheat sheet</h1>
+  <p class="intro">The same jobs in Anthropic, OpenAI, Google Gemini, AWS Bedrock and Ollama: install, sign in, first call, system prompts, streaming, chat, parameters and errors.</p>
+  <nav class="toc" aria-label="On this page"><a href="#at-a-glance">At a glance</a><a href="#anthropic-claude">Anthropic (Claude)</a><a href="#openai-gpt">OpenAI (GPT)</a><a href="#google-gemini">Google Gemini</a><a href="#aws-bedrock">AWS Bedrock</a><a href="#ollama-local">Ollama (local)</a><a href="#common-errors-by-provider">Common errors by provider</a><a href="#tips-that-apply-everywhere">Tips that apply everywhere</a></nav>
+
+<p class="callout"><strong>Draft</strong> · Supports Episodes 2, 5 and 7 · The Ollama example was run live; the Gemini calls match the ones run in Episodes 2–6. Anthropic, OpenAI and Bedrock examples follow each SDK's documented API but weren't run here (no keys). SDKs change: check the current docs.</p>
+<h2 id="at-a-glance">At a glance</h2>
+<div class="tablecard"><table>
+<thead>
+<tr>
+<th></th>
+<th>Anthropic</th>
+<th>OpenAI</th>
+<th>Gemini</th>
+<th>Bedrock</th>
+<th>Ollama</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Package</strong></td>
+<td><code>anthropic</code></td>
+<td><code>openai</code></td>
+<td><code>google-genai</code></td>
+<td><code>boto3</code></td>
+<td>none (HTTP) or <code>openai</code></td>
+</tr>
+<tr>
+<td><strong>Auth</strong></td>
+<td><code>ANTHROPIC_API_KEY</code></td>
+<td><code>OPENAI_API_KEY</code></td>
+<td><code>GEMINI_API_KEY</code></td>
+<td>AWS profile (<code>AWS_PROFILE</code>)</td>
+<td>none (local)</td>
+</tr>
+<tr>
+<td><strong>Main call</strong></td>
+<td><code>messages.create</code></td>
+<td><code>responses.create</code></td>
+<td><code>models.generate_content</code></td>
+<td><code>converse</code></td>
+<td><code>POST /api/chat</code></td>
+</tr>
+<tr>
+<td><strong>System prompt</strong></td>
+<td><code>system=</code></td>
+<td><code>instructions=</code></td>
+<td><code>system_instruction=</code> (in config)</td>
+<td><code>system=[{"text": ...}]</code></td>
+<td>a <code>system</code> message</td>
+</tr>
+<tr>
+<td><strong>Max output</strong></td>
+<td><code>max_tokens</code> (<strong>required</strong>)</td>
+<td><code>max_output_tokens</code></td>
+<td><code>max_output_tokens</code></td>
+<td><code>inferenceConfig.maxTokens</code></td>
+<td><code>options.num_predict</code></td>
+</tr>
+<tr>
+<td><strong>Why it stopped</strong></td>
+<td><code>stop_reason</code></td>
+<td><code>status</code> / <code>incomplete_details</code></td>
+<td><code>finish_reason</code></td>
+<td><code>stopReason</code></td>
+<td><code>done_reason</code></td>
+</tr>
+<tr>
+<td><strong>Token usage</strong></td>
+<td><code>usage.input_tokens</code> / <code>output_tokens</code></td>
+<td><code>usage.input_tokens</code> / <code>output_tokens</code></td>
+<td><code>usage_metadata</code></td>
+<td><code>usage.inputTokens</code> / <code>outputTokens</code></td>
+<td><code>prompt_eval_count</code> / <code>eval_count</code></td>
+</tr>
+</tbody>
+</table></div>
+<p>Install everything used in this course:</p>
+<div class="codewrap"><button class="copy" type="button">Copy</button><pre class="code">uv add anthropic openai google-genai boto3 python-dotenv</pre></div>
+<hr />
+<h2 id="anthropic-claude">Anthropic (Claude)</h2>
+<div class="codewrap"><button class="copy" type="button">Copy</button><pre class="code">import os
+import anthropic
+from dotenv import load_dotenv
+
+load_dotenv()
+client = anthropic.Anthropic()  # reads ANTHROPIC_API_KEY
+
+msg = client.messages.create(
+    model=os.environ["ANTHROPIC_MODEL"],
+    max_tokens=500,                      # required
+    system="You are a concise assistant.",
+    messages=[{"role": "user", "content": "Explain tokens in one sentence."}],
+)
+print(msg.content[0].text)
+print(msg.stop_reason, msg.usage.input_tokens, msg.usage.output_tokens)</pre></div>
+<p><strong>Streaming:</strong></p>
+<div class="codewrap"><button class="copy" type="button">Copy</button><pre class="code">with client.messages.stream(
+    model=os.environ["ANTHROPIC_MODEL"], max_tokens=500,
+    messages=[{"role": "user", "content": "Write a haiku about Python."}],
+) as stream:
+    for text in stream.text_stream:
+        print(text, end="", flush=True)</pre></div>
+<p><strong>Multi-turn:</strong> send the whole history each time, alternating <code>user</code> and <code>assistant</code> messages.</p>
+<p><strong>Count tokens before sending:</strong> <code>client.messages.count_tokens(model=..., messages=[...]).input_tokens</code></p>
+<h2 id="openai-gpt">OpenAI (GPT)</h2>
+<div class="codewrap"><button class="copy" type="button">Copy</button><pre class="code">import os
+from openai import OpenAI
+from dotenv import load_dotenv
+
+load_dotenv()
+client = OpenAI()  # reads OPENAI_API_KEY
+
+response = client.responses.create(
+    model=os.environ["OPENAI_MODEL"],
+    instructions="You are a concise assistant.",
+    input="Explain tokens in one sentence.",
+    max_output_tokens=500,
+)
+print(response.output_text)
+print(response.usage.input_tokens, response.usage.output_tokens)</pre></div>
+<p><strong>Streaming:</strong></p>
+<div class="codewrap"><button class="copy" type="button">Copy</button><pre class="code">stream = client.responses.create(model=os.environ["OPENAI_MODEL"], input="Write a haiku about Python.", stream=True)
+for event in stream:
+    if event.type == "response.output_text.delta":
+        print(event.delta, end="", flush=True)</pre></div>
+<p><strong>Multi-turn:</strong> pass a list of <code>{"role": ..., "content": ...}</code> items as <code>input</code>, or continue with <code>previous_response_id=response.id</code>.</p>
+<p class="callout">The older <strong>Chat Completions</strong> API (<code>client.chat.completions.create(messages=[...])</code>) is still widely used and is what many other tools copy (including Ollama's compatible endpoint).</p>
+<h2 id="google-gemini">Google Gemini</h2>
+<div class="codewrap"><button class="copy" type="button">Copy</button><pre class="code">import os
+from google import genai
+from google.genai import types
+from dotenv import load_dotenv
+
+load_dotenv()
+client = genai.Client()  # reads GEMINI_API_KEY
+
+reply = client.models.generate_content(
+    model=os.environ["GEMINI_MODEL"],
+    contents="Explain tokens in one sentence.",
+    config=types.GenerateContentConfig(
+        system_instruction="You are a concise assistant.",
+        max_output_tokens=2000,           # includes hidden thinking on reasoning models
+    ),
+)
+print(reply.text)
+print(reply.candidates[0].finish_reason, reply.usage_metadata)</pre></div>
+<p><strong>Streaming:</strong></p>
+<div class="codewrap"><button class="copy" type="button">Copy</button><pre class="code">for chunk in client.models.generate_content_stream(model=os.environ["GEMINI_MODEL"], contents="Write a haiku about Python."):
+    print(chunk.text or "", end="", flush=True)</pre></div>
+<p><strong>Multi-turn:</strong> <code>chat = client.chats.create(model=...)</code>, then <code>chat.send_message("...")</code> keeps the history for you.</p>
+<p><strong>Count tokens before sending:</strong> <code>client.models.count_tokens(model=..., contents=...)</code> (free).</p>
+<h2 id="aws-bedrock">AWS Bedrock</h2>
+<div class="codewrap"><button class="copy" type="button">Copy</button><pre class="code">import os
+import boto3
+from dotenv import load_dotenv
+
+load_dotenv()
+session = boto3.Session(profile_name=os.getenv("AWS_PROFILE"), region_name=os.environ["AWS_REGION"])
+bedrock = session.client("bedrock-runtime")
+
+resp = bedrock.converse(
+    modelId=os.environ["BEDROCK_MODEL_ID"],
+    system=[{"text": "You are a concise assistant."}],
+    messages=[{"role": "user", "content": [{"text": "Explain tokens in one sentence."}]}],
+    inferenceConfig={"maxTokens": 500, "temperature": 0.3},
+)
+print(resp["output"]["message"]["content"][0]["text"])
+print(resp["stopReason"], resp["usage"])</pre></div>
+<p><strong>Streaming:</strong> <code>converse_stream(...)</code>, then read <code>contentBlockDelta</code> events from <code>resp["stream"]</code>.</p>
+<p class="callout">The <strong>Converse API</strong> uses the same request shape for every Bedrock model, so switching models is just a new <code>modelId</code>. Setup help: <a href="../aws-bedrock/">AWS CLI and Bedrock setup</a>.</p>
+<h2 id="ollama-local">Ollama (local)</h2>
+<div class="codewrap"><button class="copy" type="button">Copy</button><pre class="code">from openai import OpenAI
+
+client = OpenAI(base_url="http://localhost:11434/v1", api_key="ollama")
+reply = client.chat.completions.create(
+    model="gemma3:1b",
+    messages=[{"role": "system", "content": "You are a concise assistant."},
+              {"role": "user", "content": "Explain tokens in one sentence."}],
+)
+print(reply.choices[0].message.content)</pre></div>
+<p>More in the <a href="../ollama/">Ollama cheat sheet</a>.</p>
+<hr />
+<h2 id="common-errors-by-provider">Common errors by provider</h2>
+<div class="tablecard"><table>
+<thead>
+<tr>
+<th>Problem</th>
+<th>Anthropic</th>
+<th>OpenAI</th>
+<th>Gemini</th>
+<th>Bedrock</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Bad or missing key</td>
+<td><code>401 authentication_error</code></td>
+<td><code>401 invalid_api_key</code></td>
+<td><code>400 API key not valid</code></td>
+<td><code>UnrecognizedClientException</code> / expired SSO token</td>
+</tr>
+<tr>
+<td>No access to model</td>
+<td><code>403</code> / <code>404 not_found_error</code></td>
+<td><code>404 model_not_found</code></td>
+<td><code>404 NOT_FOUND</code></td>
+<td><code>AccessDeniedException</code></td>
+</tr>
+<tr>
+<td>Too many requests</td>
+<td><code>429 rate_limit_error</code></td>
+<td><code>429 rate_limit_exceeded</code></td>
+<td><code>429 RESOURCE_EXHAUSTED</code></td>
+<td><code>ThrottlingException</code></td>
+</tr>
+<tr>
+<td>Provider busy</td>
+<td><code>529 overloaded_error</code></td>
+<td><code>500</code> / <code>503</code></td>
+<td><code>503 UNAVAILABLE</code></td>
+<td><code>ServiceUnavailableException</code></td>
+</tr>
+</tbody>
+</table></div>
+<p>What to do about each: <a href="../api-errors/">API errors and rate limits</a>.</p>
+<h2 id="tips-that-apply-everywhere">Tips that apply everywhere</h2>
+<ul>
+<li>Keep <strong>model IDs in <code>.env</code></strong>, never in code.</li>
+<li>Always <strong>check the stop reason</strong>: a length stop means a cut-off answer.</li>
+<li><strong>Log token usage</strong> from every response.</li>
+<li>The Anthropic and OpenAI SDKs <strong>retry some errors automatically</strong> (2 retries by default; change with <code>max_retries=</code>).</li>
+</ul>
+  <footer>Amit · Generative AI &amp; Agentic AI Instructor · Generated from <a href="https://github.com/Amitpnk/genai-zero-to-production/tree/main/guides/llm-providers">the Markdown notes</a></footer>
+</main>
+
+<script src="../../assets/guide.js"></script>
+</body>
+</html>

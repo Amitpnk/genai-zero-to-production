@@ -61,3 +61,6 @@ summary:hover { color: var(--cream); }
 
 /* Show code exactly as typed: no ">=" to "≥" ligatures. */
 .guide code, .guide pre { font-variant-ligatures: none; }
+
+/* Section dividers from Markdown "---" */
+.guide hr { border: 0; border-top: 1px solid var(--line-dark); margin: 40px 0; }

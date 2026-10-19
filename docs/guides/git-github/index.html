@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Git and GitHub for this course · GenAI Zero to Production</title>
+<meta name="description" content="Everything you need to follow along: get the code, stay up to date, keep your own experiments, and never leak a key.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/deck.css">
+<link rel="stylesheet" href="../../assets/guide.css">
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="../../">GenAI <span>Zero to Production</span></a>
+  <nav aria-label="Guide">
+    <a href="../">All guides</a>
+    <a href="https://github.com/Amitpnk/genai-zero-to-production/tree/main/guides/git-github">Markdown notes</a>
+    <a href="https://github.com/Amitpnk/genai-zero-to-production">GitHub repo</a>
+  </nav>
+</header>
+
+<main class="guide">
+  <p class="eyebrow">Guide · Draft</p>
+  <h1>Git and GitHub for this course</h1>
+  <p class="intro">Everything you need to follow along: get the code, stay up to date, keep your own experiments, and never leak a key.</p>
+  <nav class="toc" aria-label="On this page"><a href="#1-install-and-set-up-once">1. Install and set up once</a><a href="#2-get-the-course-code">2. Get the course code</a><a href="#3-stay-up-to-date">3. Stay up to date</a><a href="#4-experiment-without-breaking-anything">4. Experiment without breaking anything</a><a href="#5-everyday-commands">5. Everyday commands</a><a href="#6-never-leak-a-key">6. Never leak a key</a><a href="#7-found-a-bug-in-the-course">7. Found a bug in the course?</a></nav>
+
+<p class="callout"><strong>Draft</strong> · Supports Episode 2 onwards · Commands work the same on Windows (Git Bash or PowerShell), macOS and Linux.</p>
+<h2 id="1-install-and-set-up-once">1. Install and set up once</h2>
+<div class="codewrap"><button class="copy" type="button">Copy</button><pre class="code">git --version                                   # check it's installed (git-scm.com if not)
+git config --global user.name "Your Name"
+git config --global user.email "you@example.com"
+git config --global init.defaultBranch main</pre></div>
+<p>Optional but handy: the <a href="https://cli.github.com/">GitHub CLI</a> (<code>gh auth login</code>) makes cloning, forking and opening pull requests easier.</p>
+<h2 id="2-get-the-course-code">2. Get the course code</h2>
+<div class="codewrap"><button class="copy" type="button">Copy</button><pre class="code">git clone https://github.com/Amitpnk/genai-zero-to-production.git
+cd genai-zero-to-production
+uv sync
+cp .env.example .env        # then paste your keys</pre></div>
+<h2 id="3-stay-up-to-date">3. Stay up to date</h2>
+<div class="codewrap"><button class="copy" type="button">Copy</button><pre class="code">git pull                    # get new episodes
+uv sync                     # install any new packages</pre></div>
+<p><strong><code>git pull</code> complains about local changes?</strong> You edited a course file. Either keep your change on a branch (below), or put it aside:</p>
+<div class="codewrap"><button class="copy" type="button">Copy</button><pre class="code">git stash                   # put your changes aside
+git pull
+git stash pop               # bring them back (fix any conflicts)</pre></div>
+<h2 id="4-experiment-without-breaking-anything">4. Experiment without breaking anything</h2>
+<p>Work on your own <strong>branch</strong> so <code>main</code> always matches the course:</p>
+<div class="codewrap"><button class="copy" type="button">Copy</button><pre class="code">git switch -c my-experiments        # create and move to a new branch
+# ... edit, run, break things ...
+git add -A
+git commit -m "Try a higher temperature"
+git switch main                     # back to the clean course code</pre></div>
+<p><strong>Want your own copy on GitHub?</strong> Fork the repo on GitHub (or <code>gh repo fork --clone</code>), then push your branch to your fork.</p>
+<h2 id="5-everyday-commands">5. Everyday commands</h2>
+<div class="tablecard"><table>
+<thead>
+<tr>
+<th>Command</th>
+<th>What it does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>git status</code></td>
+<td>What's changed? (<code>.env</code> must <strong>never</strong> appear here)</td>
+</tr>
+<tr>
+<td><code>git diff</code></td>
+<td>Exactly what changed in each file</td>
+</tr>
+<tr>
+<td><code>git log --oneline -10</code></td>
+<td>The last 10 commits</td>
+</tr>
+<tr>
+<td><code>git restore &lt;file&gt;</code></td>
+<td>Throw away your changes to one file</td>
+</tr>
+<tr>
+<td><code>git switch &lt;branch&gt;</code></td>
+<td>Move to another branch</td>
+</tr>
+<tr>
+<td><code>git branch</code></td>
+<td>List branches</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="6-never-leak-a-key">6. Never leak a key</h2>
+<ol>
+<li><strong><code>.env</code> is in <code>.gitignore</code></strong>: check with <code>git check-ignore .env</code> (it should print <code>.env</code>).</li>
+<li><strong>Look before you commit</strong>: <code>git status</code> and <code>git diff --staged</code>.</li>
+<li><strong>Turn on GitHub's protection</strong> for your own repos: <em>Settings → Code security → Secret scanning</em> and <strong>Push protection</strong>, which blocks pushes that contain known key formats.</li>
+<li><strong>Optional pre-commit scanner</strong>, such as <code>gitleaks</code> or <code>detect-secrets</code>, to catch keys before they're committed.</li>
+</ol>
+<p><strong>If a key does get pushed:</strong></p>
+<ol>
+<li><strong>Revoke and rotate it first</strong>, in the provider's console. This stops the damage.</li>
+<li>Check usage and billing for anything unexpected.</li>
+<li>Then clean history (e.g. <code>git filter-repo</code>), knowing forks and clones may still have it.</li>
+</ol>
+<p class="callout">Rotation comes <strong>before</strong> cleanup: <a href="https://github.com/Amitpnk/genai-zero-to-production/tree/main/ep02-setup">Episode 2</a>'s interview question.</p>
+<h2 id="7-found-a-bug-in-the-course">7. Found a bug in the course?</h2>
+<p>Open an issue: <a href="https://github.com/Amitpnk/genai-zero-to-production/issues">github.com/Amitpnk/genai-zero-to-production/issues</a>. Include the episode, the command you ran, and the full error (with keys removed).</p>
+  <footer>Amit · Generative AI &amp; Agentic AI Instructor · Generated from <a href="https://github.com/Amitpnk/genai-zero-to-production/tree/main/guides/git-github">the Markdown notes</a></footer>
+</main>
+
+<script src="../../assets/guide.js"></script>
+</body>
+</html>

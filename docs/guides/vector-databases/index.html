@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vector databases quickstart · GenAI Zero to Production</title>
+<meta name="description" content="Store embeddings and find the most similar ones: the core of semantic search and RAG. Quick starts for Chroma (local, zero setup) and pgvector (PostgreSQL).">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/deck.css">
+<link rel="stylesheet" href="../../assets/guide.css">
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="../../">GenAI <span>Zero to Production</span></a>
+  <nav aria-label="Guide">
+    <a href="../">All guides</a>
+    <a href="https://github.com/Amitpnk/genai-zero-to-production/tree/main/guides/vector-databases">Markdown notes</a>
+    <a href="https://github.com/Amitpnk/genai-zero-to-production">GitHub repo</a>
+  </nav>
+</header>
+
+<main class="guide">
+  <p class="eyebrow">Guide · Draft</p>
+  <h1>Vector databases quickstart</h1>
+  <p class="intro">Store embeddings and find the most similar ones: the core of semantic search and RAG. Quick starts for Chroma (local, zero setup) and pgvector (PostgreSQL).</p>
+  <nav class="toc" aria-label="On this page"><a href="#what-a-vector-database-does">What a vector database does</a><a href="#which-one">Which one?</a><a href="#chroma-in-10-lines">Chroma in 10 lines</a><a href="#pgvector-quick-start">pgvector quick start</a><a href="#things-that-matter-more-than-the-database">Things that matter more than the database</a></nav>
+
+<p class="callout"><strong>Draft</strong> · Preview of Module 3 (Embeddings &amp; Vector Databases) · Code follows the libraries' documented APIs; it will be run and finalised in Module 3.</p>
+<h2 id="what-a-vector-database-does">What a vector database does</h2>
+<div class="codewrap"><button class="copy" type="button">Copy</button><pre class="code">documents ──embed──▶ vectors ──store──▶ vector DB
+question  ──embed──▶ vector  ──search─▶ "the 5 nearest vectors" ──▶ their documents</pre></div>
+<p>It's a database whose main query is <strong>"find the stored items closest in meaning to this one"</strong>, using similarity measures like cosine similarity (<a href="https://github.com/Amitpnk/genai-zero-to-production/tree/main/ep03-how-llms-work">Episode 3</a>).</p>
+<h2 id="which-one">Which one?</h2>
+<div class="tablecard"><table>
+<thead>
+<tr>
+<th>Option</th>
+<th>Best for</th>
+<th>Setup</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Chroma</strong></td>
+<td>Learning, prototypes, small apps</td>
+<td><code>uv add chromadb</code>, no server needed</td>
+</tr>
+<tr>
+<td><strong>pgvector</strong></td>
+<td>You already use PostgreSQL; production with SQL</td>
+<td>A Postgres extension (Docker or managed)</td>
+</tr>
+<tr>
+<td><strong>FAISS</strong></td>
+<td>Fast in-memory search inside one Python process</td>
+<td>A library, not a database</td>
+</tr>
+<tr>
+<td><strong>Pinecone</strong></td>
+<td>Fully managed, scale without running servers</td>
+<td>Cloud account</td>
+</tr>
+<tr>
+<td><strong>OpenSearch</strong></td>
+<td>Search + vectors together; AWS-friendly</td>
+<td>Managed service or cluster</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="chroma-in-10-lines">Chroma in 10 lines</h2>
+<div class="codewrap"><button class="copy" type="button">Copy</button><pre class="code">import chromadb
+
+client = chromadb.PersistentClient(path="chroma_data")      # saved to disk
+docs = client.get_or_create_collection("course_notes")
+
+docs.add(
+    ids=["ep3", "ep4", "ep5"],
+    documents=[
+        "Embeddings turn tokens into vectors of meaning.",
+        "The context window holds input and output tokens.",
+        "Temperature reshapes the next-token odds.",
+    ],
+)
+
+results = docs.query(query_texts=["How much text can a model see at once?"], n_results=1)
+print(results["documents"][0])     # ['The context window holds input and output tokens.']</pre></div>
+<p>Chroma embeds the text for you with a small default model. To use your own embeddings (e.g. Gemini's), pass <code>embeddings=[...]</code> to <code>add</code> and <code>query_embeddings=[...]</code> to <code>query</code>.</p>
+<h2 id="pgvector-quick-start">pgvector quick start</h2>
+<p>Run PostgreSQL with pgvector in Docker:</p>
+<div class="codewrap"><button class="copy" type="button">Copy</button><pre class="code">docker run -d --name pgvector -e POSTGRES_PASSWORD=dev -p 5432:5432 pgvector/pgvector:pg17</pre></div>
+<div class="codewrap"><button class="copy" type="button">Copy</button><pre class="code">CREATE EXTENSION IF NOT EXISTS vector;
+
+CREATE TABLE notes (
+  id        serial PRIMARY KEY,
+  content   text,
+  embedding vector(768)          -- must match your embedding size
+);
+
+-- nearest 5 by cosine distance (&lt;=&gt; operator)
+SELECT content FROM notes ORDER BY embedding &lt;=&gt; '[0.01, -0.02, ...]' LIMIT 5;
+
+-- an index for speed once you have lots of rows
+CREATE INDEX ON notes USING hnsw (embedding vector_cosine_ops);</pre></div>
+<p class="callout"><strong>Dimension gotcha:</strong> <code>gemini-embedding-001</code> returns <strong>3,072</strong> numbers by default (<a href="https://github.com/Amitpnk/genai-zero-to-production/tree/main/ep03-how-llms-work">Episode 3</a>), but pgvector's HNSW index on the standard <code>vector</code> type supports up to <strong>2,000</strong> dimensions. Ask the embedding API for fewer dimensions (e.g. 768), or use pgvector's <code>halfvec</code> type.</p>
+<h2 id="things-that-matter-more-than-the-database">Things that matter more than the database</h2>
+<ul>
+<li><strong>Chunking:</strong> how you split documents decides what can be found (Module 3).</li>
+<li><strong>The same embedding model</strong> must be used for documents and questions.</li>
+<li><strong>Metadata filters</strong> (source, date, user) narrow results before similarity search.</li>
+<li><strong>Evaluate retrieval:</strong> does the right chunk come back for real questions? (Module 4)</li>
+</ul>
+  <footer>Amit · Generative AI &amp; Agentic AI Instructor · Generated from <a href="https://github.com/Amitpnk/genai-zero-to-production/tree/main/guides/vector-databases">the Markdown notes</a></footer>
+</main>
+
+<script src="../../assets/guide.js"></script>
+</body>
+</html>

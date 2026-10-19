@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MCP: build, test and connect tools · GenAI Zero to Production</title>
+<meta name="description" content="The Model Context Protocol (MCP) is a standard way to give AI apps tools and data. This guide covers the pieces, a minimal Python server, testing with the MCP Inspector, and connecting it to Claude.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/deck.css">
+<link rel="stylesheet" href="../../assets/guide.css">
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="../../">GenAI <span>Zero to Production</span></a>
+  <nav aria-label="Guide">
+    <a href="../">All guides</a>
+    <a href="https://github.com/Amitpnk/genai-zero-to-production/tree/main/guides/mcp">Markdown notes</a>
+    <a href="https://github.com/Amitpnk/genai-zero-to-production">GitHub repo</a>
+  </nav>
+</header>
+
+<main class="guide">
+  <p class="eyebrow">Guide · Draft</p>
+  <h1>MCP: build, test and connect tools</h1>
+  <p class="intro">The Model Context Protocol (MCP) is a standard way to give AI apps tools and data. This guide covers the pieces, a minimal Python server, testing with the MCP Inspector, and connecting it to Claude.</p>
+  <nav class="toc" aria-label="On this page"><a href="#the-pieces">The pieces</a><a href="#a-minimal-server-in-python">A minimal server in Python</a><a href="#test-it-with-the-mcp-inspector">Test it with the MCP Inspector</a><a href="#connect-it-to-claude">Connect it to Claude</a><a href="#debugging-checklist">Debugging checklist</a><a href="#security-basics">Security basics</a></nav>
+
+<p class="callout"><strong>Draft</strong> · Preview of Module 8 (MCP &amp; Multi-Agent) · Uses the official <code>mcp</code> Python SDK (version 2). The server example was run and its tool listed and called; the Inspector and Claude connection steps follow the docs and will be finalised in Module 8.</p>
+<h2 id="the-pieces">The pieces</h2>
+<div class="codewrap"><button class="copy" type="button">Copy</button><pre class="code">Host (Claude Desktop, Claude Code, an IDE, your app)
+  └─ MCP client  ──(stdio or HTTP)──▶  MCP server  ──▶  your API, database, files</pre></div>
+<div class="tablecard"><table>
+<thead>
+<tr>
+<th>Term</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Host</strong></td>
+<td>The AI app the user talks to</td>
+</tr>
+<tr>
+<td><strong>Client</strong></td>
+<td>The connector inside the host, one per server</td>
+</tr>
+<tr>
+<td><strong>Server</strong></td>
+<td>Your program exposing capabilities</td>
+</tr>
+<tr>
+<td><strong>Tools</strong></td>
+<td>Functions the model can call (e.g. <code>create_ticket</code>)</td>
+</tr>
+<tr>
+<td><strong>Resources</strong></td>
+<td>Data the app can read (e.g. a file or record)</td>
+</tr>
+<tr>
+<td><strong>Prompts</strong></td>
+<td>Reusable prompt templates the server offers</td>
+</tr>
+<tr>
+<td><strong>Transport</strong></td>
+<td>How they talk: <strong>stdio</strong> (local process) or <strong>Streamable HTTP</strong> (remote)</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="a-minimal-server-in-python">A minimal server in Python</h2>
+<div class="codewrap"><button class="copy" type="button">Copy</button><pre class="code">uv add "mcp[cli]"</pre></div>
+<div class="codewrap"><button class="copy" type="button">Copy</button><pre class="code"># weather_server.py
+from mcp.server.mcpserver import MCPServer
+
+mcp = MCPServer("weather")
+
+
+@mcp.tool()
+def get_forecast(city: str) -&gt; str:
+    """Get a short weather forecast for a city."""
+    return f"{city}: sunny, 24°C"          # call a real API here
+
+
+if __name__ == "__main__":
+    mcp.run()                               # stdio transport by default</pre></div>
+<p>The <strong>docstring and type hints</strong> become the tool's description and schema: that's what the model reads when deciding to call it, so write them well.</p>
+<p class="callout"><strong>Checked with <code>mcp</code> 2.3.0.</strong> In version 2 the server class is <code>MCPServer</code> (from <code>mcp.server.mcpserver</code>). Older tutorials use the version 1 name, <code>FastMCP</code> (from <code>mcp.server.fastmcp</code>): same idea, renamed. Pin <code>"mcp&lt;2"</code> if you need to run old code.</p>
+<h2 id="test-it-with-the-mcp-inspector">Test it with the MCP Inspector</h2>
+<p>The Inspector is a web UI for calling your server's tools by hand, no AI needed (requires Node.js):</p>
+<div class="codewrap"><button class="copy" type="button">Copy</button><pre class="code">npx @modelcontextprotocol/inspector uv run python weather_server.py</pre></div>
+<p>Open the URL it prints, connect, list the tools, and call <code>get_forecast</code> with a city.</p>
+<h2 id="connect-it-to-claude">Connect it to Claude</h2>
+<p><strong>Claude Code:</strong></p>
+<div class="codewrap"><button class="copy" type="button">Copy</button><pre class="code">claude mcp add weather -- uv run --directory /full/path/to/project python weather_server.py
+claude mcp list</pre></div>
+<p><strong>Claude Desktop:</strong> edit <code>claude_desktop_config.json</code>, then restart Claude Desktop.</p>
+<div class="tablecard"><table>
+<thead>
+<tr>
+<th>OS</th>
+<th>Config file</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Windows</td>
+<td><code>%APPDATA%\Claude\claude_desktop_config.json</code></td>
+</tr>
+<tr>
+<td>macOS</td>
+<td><code>~/Library/Application Support/Claude/claude_desktop_config.json</code></td>
+</tr>
+</tbody>
+</table></div>
+<div class="codewrap"><button class="copy" type="button">Copy</button><pre class="code">{
+  "mcpServers": {
+    "weather": {
+      "command": "uv",
+      "args": ["run", "--directory", "/full/path/to/project", "python", "weather_server.py"]
+    }
+  }
+}</pre></div>
+<p>Use <strong>full paths</strong>: the host doesn't start in your project folder.</p>
+<h2 id="debugging-checklist">Debugging checklist</h2>
+<div class="tablecard"><table>
+<thead>
+<tr>
+<th>Symptom</th>
+<th>Check</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Server doesn't appear</td>
+<td>JSON syntax; full paths; restart the host</td>
+</tr>
+<tr>
+<td>Server starts then dies</td>
+<td>Run the exact command yourself in a terminal and read the error</td>
+</tr>
+<tr>
+<td>Garbled or broken connection</td>
+<td>With stdio, <strong>never <code>print()</code> to stdout</strong>: it's the protocol channel. Log to <strong>stderr</strong> instead</td>
+</tr>
+<tr>
+<td>Tool never gets called</td>
+<td>Improve the tool's name and docstring; make it clearly match the task</td>
+</tr>
+<tr>
+<td>Works in Inspector, not in the host</td>
+<td>Different working directory or missing environment variables: pass them in the config's <code>env</code></td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="security-basics">Security basics</h2>
+<ul>
+<li>MCP servers can take <strong>real actions</strong>: give them the <strong>least privilege</strong> they need.</li>
+<li>Treat tool <strong>results as untrusted</strong> input (prompt injection can arrive through data).</li>
+<li>Require <strong>human confirmation</strong> for anything destructive (Module 8).</li>
+<li>Never put secrets in the config file you share; use environment variables.</li>
+</ul>
+  <footer>Amit · Generative AI &amp; Agentic AI Instructor · Generated from <a href="https://github.com/Amitpnk/genai-zero-to-production/tree/main/guides/mcp">the Markdown notes</a></footer>
+</main>
+
+<script src="../../assets/guide.js"></script>
+</body>
+</html>

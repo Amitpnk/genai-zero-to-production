@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Guides · GenAI Zero to Production</title>
+<meta name="description" content="Practical guides and cheat sheets for the GenAI Engineering series.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/deck.css">
+<link rel="stylesheet" href="../assets/guide.css">
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="../">GenAI <span>Zero to Production</span></a>
+  <nav aria-label="Guide">
+    <a href="./">All guides</a>
+    <a href="https://github.com/Amitpnk/genai-zero-to-production/tree/main/guides">Markdown notes</a>
+    <a href="https://github.com/Amitpnk/genai-zero-to-production">GitHub repo</a>
+  </nav>
+</header>
+
+<style>
+  .hubcard { display: block; text-decoration: none; color: inherit; }
+  .hubcard:hover { border-color: var(--mist); }
+  .hubcard h3 .tag { font: 500 11px var(--mono); color: var(--ink); background: var(--mist); border-radius: 4px; padding: 2px 6px; margin-left: 6px; vertical-align: 2px; }
+  .hubcard .note { margin: 0; }
+</style>
+<main class="guide">
+  <p class="eyebrow">GenAI Zero to Production</p>
+  <h1>Guides</h1>
+  <p class="intro">Practical guides and cheat sheets that sit alongside the episodes. Pages marked <b>draft</b> are still being refined.</p>
+<h2>Setup and tools</h2>
+<div class="grid"><a class="gcard hubcard" href="uv/"><h3>uv: the Python project manager used in this series </h3><p class="note">A practical guide and command cheat sheet. Introduced in Episode 2 and used in every episode after.</p></a><a class="gcard hubcard" href="git-github/"><h3>Git and GitHub for this course <span class="tag">draft</span></h3><p class="note">Everything you need to follow along: get the code, stay up to date, keep your own experiments, and never leak a key.</p></a><a class="gcard hubcard" href="aws-bedrock/"><h3>AWS CLI and Bedrock setup <span class="tag">draft</span></h3><p class="note">Get from &quot;I have an AWS account&quot; to a working Bedrock call: install the AWS CLI, sign in with a profile, pick a region, enable model access, and fix the usual errors.</p></a><a class="gcard hubcard" href="jupyter/"><h3>Jupyter notebooks with uv <span class="tag">draft</span></h3><p class="note">Use notebooks for quick experiments, with the project&#x27;s .venv as the kernel so every course package is available.</p></a><a class="gcard hubcard" href="ollama/"><h3>Ollama: run LLMs on your own machine </h3><p class="note">A practical guide and command cheat sheet. Used in Episode 3 (next_token.py) and again in Module 5 (Running models locally).</p></a><a class="gcard hubcard" href="docker/"><h3>Docker for Python AI apps <span class="tag">draft</span></h3><p class="note">Package a uv-based Python app into a container so it runs the same everywhere: your laptop, CI and AWS (ECS Fargate in Module 10).</p></a></div>
+<h2>Working with LLMs</h2>
+<div class="grid"><a class="gcard hubcard" href="llm-providers/"><h3>LLM provider cheat sheet <span class="tag">draft</span></h3><p class="note">The same jobs in Anthropic, OpenAI, Google Gemini, AWS Bedrock and Ollama: install, sign in, first call, system prompts, streaming, chat, parameters and errors.</p></a><a class="gcard hubcard" href="api-errors/"><h3>API errors and rate limits <span class="tag">draft</span></h3><p class="note">What 400, 401, 403, 404, 429 and 5xx errors mean when calling LLM APIs, which ones to retry, and how to retry safely.</p></a><a class="gcard hubcard" href="prompt-patterns/"><h3>Prompt patterns cheat sheet <span class="tag">draft</span></h3><p class="note">Reusable ways to structure prompts so models do what you want, reliably.</p></a><a class="gcard hubcard" href="cost-estimation/"><h3>Estimating LLM costs <span class="tag">draft</span></h3><p class="note">Work out what an LLM feature will cost before you ship it, and the levers that bring the bill down.</p></a></div>
+<h2>Building and running apps</h2>
+<div class="grid"><a class="gcard hubcard" href="vector-databases/"><h3>Vector databases quickstart <span class="tag">draft</span></h3><p class="note">Store embeddings and find the most similar ones: the core of semantic search and RAG. Quick starts for Chroma (local, zero setup) and pgvector (PostgreSQL).</p></a><a class="gcard hubcard" href="mcp/"><h3>MCP: build, test and connect tools <span class="tag">draft</span></h3><p class="note">The Model Context Protocol (MCP) is a standard way to give AI apps tools and data. This guide covers the pieces, a minimal Python server, testing with the MCP Inspector, and connecting it to Claude.</p></a><a class="gcard hubcard" href="tracing/"><h3>Tracing LLM apps <span class="tag">draft</span></h3><p class="note">See every step of an LLM app (prompts, model calls, tool calls, tokens, latency and cost) so you can debug it and improve it.</p></a></div>
+<h2>Reference</h2>
+<div class="grid"><a class="gcard hubcard" href="glossary/"><h3>GenAI glossary <span class="tag">draft</span></h3><p class="note">Plain-English definitions of the terms used in this series, with links to where each one is explained properly.</p></a></div>
+  <footer>Amit · Generative AI &amp; Agentic AI Instructor · Generated from <a href="https://github.com/Amitpnk/genai-zero-to-production/tree/main/guides">the Markdown notes</a></footer>
+</main>
+
+<script src="../assets/guide.js"></script>
+</body>
+</html>

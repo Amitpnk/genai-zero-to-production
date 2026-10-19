@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Estimating LLM costs · GenAI Zero to Production</title>
+<meta name="description" content="Work out what an LLM feature will cost before you ship it, and the levers that bring the bill down.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/deck.css">
+<link rel="stylesheet" href="../../assets/guide.css">
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="../../">GenAI <span>Zero to Production</span></a>
+  <nav aria-label="Guide">
+    <a href="../">All guides</a>
+    <a href="https://github.com/Amitpnk/genai-zero-to-production/tree/main/guides/cost-estimation">Markdown notes</a>
+    <a href="https://github.com/Amitpnk/genai-zero-to-production">GitHub repo</a>
+  </nav>
+</header>
+
+<main class="guide">
+  <p class="eyebrow">Guide · Draft</p>
+  <h1>Estimating LLM costs</h1>
+  <p class="intro">Work out what an LLM feature will cost before you ship it, and the levers that bring the bill down.</p>
+  <nav class="toc" aria-label="On this page"><a href="#the-formula">The formula</a><a href="#worked-example">Worked example</a><a href="#estimate-it-in-code">Estimate it in code</a><a href="#levers-roughly-in-order-of-impact">Levers, roughly in order of impact</a><a href="#dont-forget">Don&#x27;t forget</a></nav>
+
+<p class="callout"><strong>Draft</strong> · Builds on Episodes 4 and 6; full detail in Module 10 · All prices here are <strong>examples</strong> to show the maths. Always use your provider's current pricing page.</p>
+<h2 id="the-formula">The formula</h2>
+<div class="codewrap"><button class="copy" type="button">Copy</button><pre class="code">cost per request = input_tokens  × input_price  / 1,000,000
+                 + output_tokens × output_price / 1,000,000      (output includes hidden thinking)
+
+monthly cost     = cost per request × requests per user per day × users × 30</pre></div>
+<h2 id="worked-example">Worked example</h2>
+<p>A support chatbot. Example prices: <strong>$0.50</strong> per million input tokens, <strong>$3.00</strong> per million output tokens.</p>
+<div class="tablecard"><table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>System prompt + tools</td>
+<td>800 tokens</td>
+</tr>
+<tr>
+<td>Average chat history sent</td>
+<td>1,500 tokens</td>
+</tr>
+<tr>
+<td>Retrieved documents</td>
+<td>2,000 tokens</td>
+</tr>
+<tr>
+<td>User question</td>
+<td>50 tokens</td>
+</tr>
+<tr>
+<td><strong>Input per request</strong></td>
+<td><strong>4,350 tokens</strong></td>
+</tr>
+<tr>
+<td>Visible answer</td>
+<td>200 tokens</td>
+</tr>
+<tr>
+<td>Hidden thinking</td>
+<td>300 tokens</td>
+</tr>
+<tr>
+<td><strong>Output per request</strong></td>
+<td><strong>500 tokens</strong></td>
+</tr>
+</tbody>
+</table></div>
+<div class="codewrap"><button class="copy" type="button">Copy</button><pre class="code">input  = 4,350 × $0.50 / 1M = $0.0022
+output =   500 × $3.00 / 1M = $0.0015
+per request                 = $0.0037
+
+1,000 users × 10 requests/day × 30 days = 300,000 requests
+monthly ≈ 300,000 × $0.0037 ≈ $1,100</pre></div>
+<p>Notice where the money goes: <strong>input dominates</strong> here because history and documents are resent on every request (<a href="https://github.com/Amitpnk/genai-zero-to-production/tree/main/ep04-tokens-and-context-windows">Episode 4</a>).</p>
+<h2 id="estimate-it-in-code">Estimate it in code</h2>
+<div class="codewrap"><button class="copy" type="button">Copy</button><pre class="code">PRICE_IN, PRICE_OUT = 0.50, 3.00          # EXAMPLE prices per 1M tokens
+
+
+def monthly_cost(tokens_in, tokens_out, users, requests_per_day, days=30):
+    per_request = (tokens_in * PRICE_IN + tokens_out * PRICE_OUT) / 1_000_000
+    return per_request * users * requests_per_day * days
+
+
+print(f"${monthly_cost(4350, 500, users=1000, requests_per_day=10):,.0f} per month")   # $1,102 per month</pre></div>
+<p>Use <strong>real token counts</strong> from the <code>usage</code> field of actual responses, not guesses.</p>
+<h2 id="levers-roughly-in-order-of-impact">Levers, roughly in order of impact</h2>
+<div class="tablecard"><table>
+<thead>
+<tr>
+<th>Lever</th>
+<th>Typical effect</th>
+<th>Where</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Smaller model / tier</strong></td>
+<td>Often several times cheaper</td>
+<td><a href="https://github.com/Amitpnk/genai-zero-to-production/tree/main/ep06-model-landscape">Episode 6</a></td>
+</tr>
+<tr>
+<td><strong>Send less context</strong></td>
+<td>Fewer input tokens on every call</td>
+<td>RAG (Module 4), trimming history</td>
+</tr>
+<tr>
+<td><strong>Prompt caching</strong></td>
+<td>Repeated prompt prefixes billed at a discount</td>
+<td>Module 10</td>
+</tr>
+<tr>
+<td><strong>Batch API</strong></td>
+<td>Discounted price for non-urgent jobs, results within hours</td>
+<td>Module 10</td>
+</tr>
+<tr>
+<td><strong>Cap output</strong></td>
+<td><code>max_tokens</code>, ask for brevity, limit thinking</td>
+<td><a href="https://github.com/Amitpnk/genai-zero-to-production/tree/main/ep05-sampling-parameters">Episode 5</a></td>
+</tr>
+<tr>
+<td><strong>Cache whole answers</strong></td>
+<td>Zero cost for repeated questions</td>
+<td>Module 10</td>
+</tr>
+<tr>
+<td><strong>Route by difficulty</strong></td>
+<td>Small model first, escalate only when needed</td>
+<td>Module 10</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="dont-forget">Don't forget</h2>
+<ul>
+<li><strong>Embeddings</strong> for indexing documents (usually cheap, but it adds up at scale)</li>
+<li><strong>Retries</strong> after errors resend the whole request</li>
+<li><strong>Evals</strong> in CI run the model on your test set every time</li>
+<li><strong>Free tiers</strong> have daily limits; plan for paid limits in production (<a href="../api-errors/">API errors guide</a>)</li>
+<li><strong>Set budget alerts</strong> on every account</li>
+</ul>
+  <footer>Amit · Generative AI &amp; Agentic AI Instructor · Generated from <a href="https://github.com/Amitpnk/genai-zero-to-production/tree/main/guides/cost-estimation">the Markdown notes</a></footer>
+</main>
+
+<script src="../../assets/guide.js"></script>
+</body>
+</html>

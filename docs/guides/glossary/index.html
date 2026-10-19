@@ -1,0 +1,322 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GenAI glossary · GenAI Zero to Production</title>
+<meta name="description" content="Plain-English definitions of the terms used in this series, with links to where each one is explained properly.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/deck.css">
+<link rel="stylesheet" href="../../assets/guide.css">
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="../../">GenAI <span>Zero to Production</span></a>
+  <nav aria-label="Guide">
+    <a href="../">All guides</a>
+    <a href="https://github.com/Amitpnk/genai-zero-to-production/tree/main/guides/glossary">Markdown notes</a>
+    <a href="https://github.com/Amitpnk/genai-zero-to-production">GitHub repo</a>
+  </nav>
+</header>
+
+<main class="guide">
+  <p class="eyebrow">Guide · Draft</p>
+  <h1>GenAI glossary</h1>
+  <p class="intro">Plain-English definitions of the terms used in this series, with links to where each one is explained properly.</p>
+  <nav class="toc" aria-label="On this page"><a href="#models">Models</a><a href="#how-llms-work">How LLMs work</a><a href="#controlling-output">Controlling output</a><a href="#prompting">Prompting</a><a href="#retrieval-and-data">Retrieval and data</a><a href="#agents-and-tools">Agents and tools</a><a href="#evaluation-and-production">Evaluation and production</a></nav>
+
+<p class="callout"><strong>Draft</strong> · Grows with every episode · Terms are grouped by topic, alphabetical within each group.</p>
+<h2 id="models">Models</h2>
+<div class="tablecard"><table>
+<thead>
+<tr>
+<th>Term</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Base model</strong></td>
+<td>A model trained only to continue text; not yet tuned to follow instructions. (<a href="https://github.com/Amitpnk/genai-zero-to-production/tree/main/ep03-how-llms-work">Ep 3</a>)</td>
+</tr>
+<tr>
+<td><strong>Closed model</strong></td>
+<td>Used only through the provider's API; you never get the weights. (<a href="https://github.com/Amitpnk/genai-zero-to-production/tree/main/ep06-model-landscape">Ep 6</a>)</td>
+</tr>
+<tr>
+<td><strong>Fine-tuning</strong></td>
+<td>Further training a model on your own examples to change its behaviour. (Module 5)</td>
+</tr>
+<tr>
+<td><strong>Foundation model</strong></td>
+<td>A large, general model trained on broad data that you build on top of. (<a href="https://github.com/Amitpnk/genai-zero-to-production/tree/main/ep01-what-is-genai-engineering">Ep 1</a>)</td>
+</tr>
+<tr>
+<td><strong>Hallucination</strong></td>
+<td>A confident answer that's wrong or made up, because the model produces plausible text, not looked-up facts. (<a href="https://github.com/Amitpnk/genai-zero-to-production/tree/main/ep03-how-llms-work">Ep 3</a>)</td>
+</tr>
+<tr>
+<td><strong>Inference</strong></td>
+<td>Running a trained model to get an output (as opposed to training it).</td>
+</tr>
+<tr>
+<td><strong>LLM</strong></td>
+<td>Large language model: a model that predicts the next token, trained on huge amounts of text.</td>
+</tr>
+<tr>
+<td><strong>Multimodal</strong></td>
+<td>Handles more than text: images, audio or video, as input or output. (Module 6)</td>
+</tr>
+<tr>
+<td><strong>Open-weight model</strong></td>
+<td>You can download the trained weights and run it yourself. Not always fully "open source". (<a href="https://github.com/Amitpnk/genai-zero-to-production/tree/main/ep06-model-landscape">Ep 6</a>)</td>
+</tr>
+<tr>
+<td><strong>Parameters / weights</strong></td>
+<td>The billions of numbers learned in training. "7B" = about 7 billion parameters.</td>
+</tr>
+<tr>
+<td><strong>Quantization</strong></td>
+<td>Storing weights with fewer bits (e.g. 4-bit) so a model uses less memory, with a small quality cost. (<a href="../ollama/">Ollama guide</a>)</td>
+</tr>
+<tr>
+<td><strong>Reasoning / thinking model</strong></td>
+<td>A model that spends extra (often hidden) tokens thinking before it answers. (<a href="https://github.com/Amitpnk/genai-zero-to-production/tree/main/ep04-tokens-and-context-windows">Ep 4</a>)</td>
+</tr>
+<tr>
+<td><strong>Tier</strong></td>
+<td>The size level within a model family: largest, balanced, smallest. (<a href="https://github.com/Amitpnk/genai-zero-to-production/tree/main/ep06-model-landscape">Ep 6</a>)</td>
+</tr>
+<tr>
+<td><strong>Transformer</strong></td>
+<td>The neural-network design behind LLMs: layers of attention and feed-forward blocks. (<a href="https://github.com/Amitpnk/genai-zero-to-production/tree/main/ep03-how-llms-work">Ep 3</a>)</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="how-llms-work">How LLMs work</h2>
+<div class="tablecard"><table>
+<thead>
+<tr>
+<th>Term</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Attention</strong></td>
+<td>Lets each token look back at earlier tokens and update its meaning from context. (<a href="https://github.com/Amitpnk/genai-zero-to-production/tree/main/ep03-how-llms-work">Ep 3</a>)</td>
+</tr>
+<tr>
+<td><strong>Autoregressive generation</strong></td>
+<td>Producing output one token at a time, each added to the input for the next. (<a href="https://github.com/Amitpnk/genai-zero-to-production/tree/main/ep03-how-llms-work">Ep 3</a>)</td>
+</tr>
+<tr>
+<td><strong>Context window</strong></td>
+<td>The maximum tokens a model handles in one request, input and output together. (<a href="https://github.com/Amitpnk/genai-zero-to-production/tree/main/ep04-tokens-and-context-windows">Ep 4</a>)</td>
+</tr>
+<tr>
+<td><strong>Embedding</strong></td>
+<td>A list of numbers representing meaning; similar meanings get similar numbers. (<a href="https://github.com/Amitpnk/genai-zero-to-production/tree/main/ep03-how-llms-work">Ep 3</a>)</td>
+</tr>
+<tr>
+<td><strong>Logprobs</strong></td>
+<td>The model's log-probabilities for candidate next tokens. (<a href="https://github.com/Amitpnk/genai-zero-to-production/tree/main/ep03-how-llms-work">Ep 3</a>)</td>
+</tr>
+<tr>
+<td><strong>Token</strong></td>
+<td>A chunk of text (often part of a word) that models read and write; the unit of cost. (<a href="https://github.com/Amitpnk/genai-zero-to-production/tree/main/ep04-tokens-and-context-windows">Ep 4</a>)</td>
+</tr>
+<tr>
+<td><strong>Tokenizer</strong></td>
+<td>Splits text into tokens; each model family has its own. (<a href="https://github.com/Amitpnk/genai-zero-to-production/tree/main/ep04-tokens-and-context-windows">Ep 4</a>)</td>
+</tr>
+<tr>
+<td><strong>Vocabulary</strong></td>
+<td>All the tokens a model knows, usually 100k–250k.</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="controlling-output">Controlling output</h2>
+<div class="tablecard"><table>
+<thead>
+<tr>
+<th>Term</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Finish / stop reason</strong></td>
+<td>Why generation ended: natural end, max tokens or a stop sequence. (<a href="https://github.com/Amitpnk/genai-zero-to-production/tree/main/ep05-sampling-parameters">Ep 5</a>)</td>
+</tr>
+<tr>
+<td><strong>Greedy decoding</strong></td>
+<td>Always picking the most likely token (temperature 0). (<a href="https://github.com/Amitpnk/genai-zero-to-production/tree/main/ep05-sampling-parameters">Ep 5</a>)</td>
+</tr>
+<tr>
+<td><strong>Max tokens</strong></td>
+<td>A hard cap on output length. (<a href="https://github.com/Amitpnk/genai-zero-to-production/tree/main/ep05-sampling-parameters">Ep 5</a>)</td>
+</tr>
+<tr>
+<td><strong>Seed</strong></td>
+<td>Makes the random choices repeatable, where supported. (<a href="https://github.com/Amitpnk/genai-zero-to-production/tree/main/ep05-sampling-parameters">Ep 5</a>)</td>
+</tr>
+<tr>
+<td><strong>Stop sequence</strong></td>
+<td>Text that ends generation as soon as it appears. (<a href="https://github.com/Amitpnk/genai-zero-to-production/tree/main/ep05-sampling-parameters">Ep 5</a>)</td>
+</tr>
+<tr>
+<td><strong>Structured output</strong></td>
+<td>Making the model return data in a fixed format, like JSON matching a schema. (Module 2)</td>
+</tr>
+<tr>
+<td><strong>System prompt</strong></td>
+<td>Instructions that set the model's role and rules for a conversation. (Ep 7)</td>
+</tr>
+<tr>
+<td><strong>Temperature</strong></td>
+<td>How sharp or flat the next-token odds are: low = focused, high = varied. (<a href="https://github.com/Amitpnk/genai-zero-to-production/tree/main/ep05-sampling-parameters">Ep 5</a>)</td>
+</tr>
+<tr>
+<td><strong>Top-p / top-k</strong></td>
+<td>Limit sampling to the most likely tokens. (<a href="https://github.com/Amitpnk/genai-zero-to-production/tree/main/ep05-sampling-parameters">Ep 5</a>)</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="prompting">Prompting</h2>
+<div class="tablecard"><table>
+<thead>
+<tr>
+<th>Term</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Chain-of-thought</strong></td>
+<td>Asking the model to reason step by step before answering. (Module 2)</td>
+</tr>
+<tr>
+<td><strong>Few-shot</strong></td>
+<td>Including a few worked examples in the prompt. (Module 2)</td>
+</tr>
+<tr>
+<td><strong>Prompt injection</strong></td>
+<td>Untrusted text tricking a model into ignoring its instructions. (Module 2)</td>
+</tr>
+<tr>
+<td><strong>Zero-shot</strong></td>
+<td>Asking without any examples. (Module 2)</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="retrieval-and-data">Retrieval and data</h2>
+<div class="tablecard"><table>
+<thead>
+<tr>
+<th>Term</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Chunking</strong></td>
+<td>Splitting documents into pieces small enough to embed and retrieve. (Module 3)</td>
+</tr>
+<tr>
+<td><strong>Cosine similarity</strong></td>
+<td>A score for how closely two embeddings point the same way. (<a href="https://github.com/Amitpnk/genai-zero-to-production/tree/main/ep03-how-llms-work">Ep 3</a>)</td>
+</tr>
+<tr>
+<td><strong>Grounding</strong></td>
+<td>Making answers rely on provided sources instead of the model's memory. (Module 4)</td>
+</tr>
+<tr>
+<td><strong>Hybrid search</strong></td>
+<td>Combining keyword search (like BM25) with vector search. (Module 4)</td>
+</tr>
+<tr>
+<td><strong>RAG</strong></td>
+<td>Retrieval-augmented generation: fetch relevant data, put it in the prompt, then answer. (Module 4)</td>
+</tr>
+<tr>
+<td><strong>Re-ranking</strong></td>
+<td>Re-ordering retrieved results with a stronger model before using them. (Module 4)</td>
+</tr>
+<tr>
+<td><strong>Vector database</strong></td>
+<td>Stores embeddings and finds the nearest ones fast. (<a href="../vector-databases/">guide</a>, Module 3)</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="agents-and-tools">Agents and tools</h2>
+<div class="tablecard"><table>
+<thead>
+<tr>
+<th>Term</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Agent</strong></td>
+<td>An LLM in a loop that decides which tools to call to reach a goal. (Module 7)</td>
+</tr>
+<tr>
+<td><strong>Guardrails</strong></td>
+<td>Checks around a model to block unsafe inputs, outputs or actions. (Modules 8, 10)</td>
+</tr>
+<tr>
+<td><strong>MCP</strong></td>
+<td>Model Context Protocol: a standard way to connect models to tools and data. (<a href="../mcp/">guide</a>, Module 8)</td>
+</tr>
+<tr>
+<td><strong>Tool / function calling</strong></td>
+<td>The model asks your code to run a function and uses the result. (Module 7)</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="evaluation-and-production">Evaluation and production</h2>
+<div class="tablecard"><table>
+<thead>
+<tr>
+<th>Term</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Eval</strong></td>
+<td>A repeatable test of model quality on a set of examples. (Module 9)</td>
+</tr>
+<tr>
+<td><strong>LLM-as-judge</strong></td>
+<td>Using a model to grade another model's outputs. (Module 9)</td>
+</tr>
+<tr>
+<td><strong>Latency / TTFT</strong></td>
+<td>Total response time / time to first token. (<a href="https://github.com/Amitpnk/genai-zero-to-production/tree/main/ep04-tokens-and-context-windows">Ep 4</a>)</td>
+</tr>
+<tr>
+<td><strong>Prompt caching</strong></td>
+<td>Reusing processed input across requests to cut cost and latency. (Module 10)</td>
+</tr>
+<tr>
+<td><strong>Rate limit</strong></td>
+<td>A cap on requests or tokens per minute or day. (<a href="../api-errors/">guide</a>)</td>
+</tr>
+<tr>
+<td><strong>Tracing</strong></td>
+<td>Recording every step of an LLM app (prompts, tool calls, tokens, time). (<a href="../tracing/">guide</a>, Module 9)</td>
+</tr>
+</tbody>
+</table></div>
+  <footer>Amit · Generative AI &amp; Agentic AI Instructor · Generated from <a href="https://github.com/Amitpnk/genai-zero-to-production/tree/main/guides/glossary">the Markdown notes</a></footer>
+</main>
+
+<script src="../../assets/guide.js"></script>
+</body>
+</html>
