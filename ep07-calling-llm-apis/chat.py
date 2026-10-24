@@ -7,7 +7,7 @@
 
 import sys
 
-from llm import provider_from_args, stream
+from shared.llm import provider_from_args, stream
 
 SYSTEM = "You are a friendly, concise assistant. Keep answers under 3 sentences."
 

@@ -23,7 +23,7 @@ Every demo in this episode works with **two providers**, chosen with `--provider
 - `ollama`: the local `gemma3:1b` model (free, offline), the default
 - `gemini`: Google Gemini (needs `GEMINI_API_KEY`)
 
-They share one small helper, [`llm.py`](llm.py), so switching providers is one flag. That's [Episode 6](../ep06-model-landscape/)'s *keep it swappable* in practice.
+They share one small helper, [`shared/llm.py`](../shared/llm.py), so switching providers is one flag. That's [Episode 6](../ep06-model-landscape/)'s *keep it swappable* in practice.
 
 ## 2. The anatomy of a call
 
@@ -148,7 +148,7 @@ A demo call is one line. A production call also needs:
 | **Log usage** | Tokens, latency and cost for every call ([tracing guide](../guides/tracing/)) |
 | **Stream** | For anything a person waits on |
 | **Manage history** | Trim or summarise; keep it server-side per user |
-| **Swappable provider** | One wrapper like `llm.py`; model IDs in `.env` ([Episode 6](../ep06-model-landscape/)) |
+| **Swappable provider** | One wrapper like `shared/llm.py`; model IDs in `.env` ([Episode 6](../ep06-model-landscape/)) |
 
 ---
 
@@ -192,7 +192,7 @@ Practise it: say it out loud in your own words before moving on.
 
 ## Next up
 
-**Module 2 begins: Episode 08, Prompt anatomy.** Role, context, task, constraints, examples and output format: how to write prompts that work reliably.
+**Module 2 begins: [Episode 08, Prompt anatomy](../ep08-prompt-anatomy/).** Role, context, task, constraints, examples and output format: how to write prompts that work reliably.
 
 ---
 

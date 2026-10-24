@@ -2,7 +2,7 @@
 
 import json
 
-from llm import chat, provider_from_args
+from shared.llm import chat, provider_from_args
 
 provider = provider_from_args()
 

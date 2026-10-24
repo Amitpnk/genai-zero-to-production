@@ -1,6 +1,6 @@
 """Same question, three system prompts: the system prompt sets the role and the rules."""
 
-from llm import chat, provider_from_args
+from shared.llm import chat, provider_from_args
 
 provider = provider_from_args()
 question = [{"role": "user", "content": "My order arrived damaged. What should I do?"}]

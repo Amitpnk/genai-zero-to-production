@@ -2,7 +2,7 @@
 
 import time
 
-from llm import chat, provider_from_args, stream
+from shared.llm import chat, provider_from_args, stream
 
 provider = provider_from_args()
 messages = [{"role": "user", "content": "Explain what an API is to a 10-year-old, in about 80 words."}]

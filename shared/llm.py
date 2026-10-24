@@ -1,5 +1,7 @@
 """One small helper so every demo can call Gemini or a local Ollama model the same way.
 
+Used from Episode 7 onwards:  from shared.llm import chat, stream, provider_from_args
+
 Messages use the common shape every provider understands in some form:
     [{"role": "user", "content": "..."}, {"role": "assistant", "content": "..."}, ...]
 The system prompt is passed separately, just like Anthropic's Messages API.
@@ -48,18 +50,19 @@ def _gemini_contents(messages):
     ]
 
 
-def _gemini_config(system, max_tokens):
+def _gemini_config(system, max_tokens, temperature):
     from google.genai import types
 
-    return types.GenerateContentConfig(system_instruction=system, max_output_tokens=max_tokens)
+    return types.GenerateContentConfig(system_instruction=system, max_output_tokens=max_tokens, temperature=temperature)
 
 
-def chat(messages, system=None, provider=None, max_tokens=2000):
+def chat(messages, system=None, provider=None, max_tokens=2000, temperature=None):
     """Send the whole conversation, get one reply back."""
     provider = provider or default_provider()
     if provider == "ollama":
         resp = _ollama_client().chat.completions.create(
-            model=os.environ["OLLAMA_MODEL"], messages=_ollama_messages(messages, system), max_tokens=max_tokens
+            model=os.environ["OLLAMA_MODEL"], messages=_ollama_messages(messages, system), max_tokens=max_tokens,
+            temperature=temperature,
         )
         choice = resp.choices[0]
         return Reply(choice.message.content, choice.finish_reason, resp.usage.prompt_tokens, resp.usage.completion_tokens)
@@ -67,7 +70,7 @@ def chat(messages, system=None, provider=None, max_tokens=2000):
         from google import genai
 
         resp = genai.Client().models.generate_content(
-            model=os.environ["GEMINI_MODEL"], contents=_gemini_contents(messages), config=_gemini_config(system, max_tokens)
+            model=os.environ["GEMINI_MODEL"], contents=_gemini_contents(messages), config=_gemini_config(system, max_tokens, temperature)
         )
         usage = resp.usage_metadata
         return Reply(resp.text or "", resp.candidates[0].finish_reason.name, usage.prompt_token_count,
@@ -75,13 +78,13 @@ def chat(messages, system=None, provider=None, max_tokens=2000):
     raise ValueError(f"Unknown provider {provider!r}: use 'ollama' or 'gemini'")
 
 
-def stream(messages, system=None, provider=None, max_tokens=2000):
+def stream(messages, system=None, provider=None, max_tokens=2000, temperature=None):
     """Yield the reply piece by piece as it's generated."""
     provider = provider or default_provider()
     if provider == "ollama":
         chunks = _ollama_client().chat.completions.create(
             model=os.environ["OLLAMA_MODEL"], messages=_ollama_messages(messages, system),
-            max_tokens=max_tokens, stream=True,
+            max_tokens=max_tokens, temperature=temperature, stream=True,
         )
         for chunk in chunks:
             if chunk.choices and chunk.choices[0].delta.content:
@@ -91,7 +94,7 @@ def stream(messages, system=None, provider=None, max_tokens=2000):
         from google import genai
 
         for chunk in genai.Client().models.generate_content_stream(
-            model=os.environ["GEMINI_MODEL"], contents=_gemini_contents(messages), config=_gemini_config(system, max_tokens)
+            model=os.environ["GEMINI_MODEL"], contents=_gemini_contents(messages), config=_gemini_config(system, max_tokens, temperature)
         ):
             if chunk.text:
                 yield chunk.text

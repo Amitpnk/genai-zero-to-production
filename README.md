@@ -43,6 +43,7 @@ genai-zero-to-production/
 | 05 | Sampling parameters | [ep05-sampling-parameters](ep05-sampling-parameters/) |
 | 06 | The model landscape | [ep06-model-landscape](ep06-model-landscape/) |
 | 07 | Calling LLM APIs | [ep07-calling-llm-apis](ep07-calling-llm-apis/) |
+| 08 | Prompt anatomy | [ep08-prompt-anatomy](ep08-prompt-anatomy/) |
 
 ## Syllabus: 42 episodes, 10 modules + capstone
 
