@@ -163,7 +163,7 @@ Practise it: say it out loud in your own words before moving on.
 
 ## Next up
 
-**Episode 07: Calling LLM APIs.** The Messages API, system prompts, streaming and multi-turn chat in pure Python.
+**[Episode 07: Calling LLM APIs](../ep07-calling-llm-apis/).** The Messages API, system prompts, streaming and multi-turn chat in pure Python.
 
 ---
 

@@ -42,6 +42,7 @@ genai-zero-to-production/
 | 04 | Tokens and context windows | [ep04-tokens-and-context-windows](ep04-tokens-and-context-windows/) |
 | 05 | Sampling parameters | [ep05-sampling-parameters](ep05-sampling-parameters/) |
 | 06 | The model landscape | [ep06-model-landscape](ep06-model-landscape/) |
+| 07 | Calling LLM APIs | [ep07-calling-llm-apis](ep07-calling-llm-apis/) |
 
 ## Syllabus: 42 episodes, 10 modules + capstone
 
