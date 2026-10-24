@@ -29,6 +29,14 @@
   .ep .links a:hover { border-color: var(--mist); }
   .ep .links a:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
   .ep.soon { opacity: .6; }
+  .module { margin-bottom: 36px; }
+  .mod-head { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 8px; }
+  .mod-num { font: 500 12px var(--mono); color: var(--orange); text-transform: uppercase; letter-spacing: .12em; }
+  .mod-head h3 { margin: 0; font: 700 20px var(--head); }
+  .mod-meta { margin-left: auto; font-size: 13px; color: var(--mist); }
+  .mod-bar { height: 4px; background: #1A2840; border-radius: 2px; margin-bottom: 14px; overflow: hidden; }
+  .mod-bar span { display: block; height: 100%; background: var(--orange); border-radius: 2px; }
+  .badge { font-size: 12px; color: var(--mist); border: 1px dashed var(--line-dark); border-radius: 8px; padding: 6px 10px; white-space: nowrap; }
   .roadmap { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
   .roadmap div { background: #0C1422; border: 1px solid #1A2840; border-radius: 10px; padding: 14px 16px; font-size: 15px; }
   .roadmap b { display: block; font-family: var(--mono); font-weight: 500; color: var(--orange); font-size: 12px; margin-bottom: 4px; }
@@ -38,6 +46,7 @@
     .home { padding-top: 40px; }
     .ep { grid-template-columns: 40px 1fr; }
     .ep .links { grid-column: 1 / -1; justify-content: flex-start; }
+    .mod-meta { margin-left: 0; width: 100%; }
   }
 </style>
 </head>
@@ -55,8 +64,11 @@
   <h1>From your first API call to a production AI agent on AWS</h1>
   <p class="intro">Slides and notes for every episode. All the code lives in the companion GitHub repo, one folder per episode.</p>
 
-  <h2>Episodes</h2>
-  <div class="eps">
+  <h2>Episodes by module</h2>
+  <section class="module" aria-label="Module 0: Orientation">
+    <div class="mod-head"><span class="mod-num">Module 0</span><h3>Orientation</h3><span class="mod-meta">Ep 1–2 · complete</span></div>
+    <div class="mod-bar" role="img" aria-label="2 of 2 episodes published"><span style="width:100%"></span></div>
+    <div class="eps">
     <article class="ep">
       <span class="num">01</span>
       <div><h3>What is GenAI Engineering?</h3><p>How it differs from ML engineering and data science, and the roadmap.</p></div>
@@ -73,6 +85,12 @@
         <a href="https://github.com/Amitpnk/genai-zero-to-production/tree/main/ep02-setup">Notes</a>
       </div>
     </article>
+    </div>
+  </section>
+  <section class="module" aria-label="Module 1: LLM Foundations">
+    <div class="mod-head"><span class="mod-num">Module 1</span><h3>LLM Foundations</h3><span class="mod-meta">Ep 3–7 · complete</span></div>
+    <div class="mod-bar" role="img" aria-label="5 of 5 episodes published"><span style="width:100%"></span></div>
+    <div class="eps">
     <article class="ep">
       <span class="num">03</span>
       <div><h3>How LLMs actually work, intuitively</h3><p>Tokens, embeddings, attention and next-token prediction, without heavy maths.</p></div>
@@ -113,6 +131,12 @@
         <a href="https://github.com/Amitpnk/genai-zero-to-production/tree/main/ep07-calling-llm-apis">Notes</a>
       </div>
     </article>
+    </div>
+  </section>
+  <section class="module" aria-label="Module 2: Prompt Engineering">
+    <div class="mod-head"><span class="mod-num">Module 2</span><h3>Prompt Engineering</h3><span class="mod-meta">Ep 8–11 · 1 of 4 published</span></div>
+    <div class="mod-bar" role="img" aria-label="1 of 4 episodes published"><span style="width:25%"></span></div>
+    <div class="eps">
     <article class="ep">
       <span class="num">08</span>
       <div><h3>Prompt anatomy</h3><p>The six parts of a prompt, measured one at a time, and why a perfect format can hide a wrong decision.</p></div>
@@ -121,7 +145,235 @@
         <a href="https://github.com/Amitpnk/genai-zero-to-production/tree/main/ep08-prompt-anatomy">Notes</a>
       </div>
     </article>
-  </div>
+    <article class="ep soon">
+      <span class="num">09</span>
+      <div><h3>Zero-shot, few-shot and chain-of-thought</h3><p>When examples help, how to choose them, and when to think step by step.</p></div>
+      <div class="links"><span class="badge">Coming soon</span></div>
+    </article>
+    <article class="ep soon">
+      <span class="num">10</span>
+      <div><h3>Structured outputs</h3><p>JSON mode, schemas with Pydantic, validation and retries.</p></div>
+      <div class="links"><span class="badge">Coming soon</span></div>
+    </article>
+    <article class="ep soon">
+      <span class="num">11</span>
+      <div><h3>Prompt injection and jailbreak basics</h3><p>How attacks work, and defensive patterns.</p></div>
+      <div class="links"><span class="badge">Coming soon</span></div>
+    </article>
+    </div>
+  </section>
+
+  <h2>Coming up</h2>
+  <section class="module upcoming" aria-label="Module 3: Embeddings and Vector Databases">
+    <div class="mod-head"><span class="mod-num">Module 3</span><h3>Embeddings and Vector Databases</h3><span class="mod-meta">Ep 12–15 · coming soon</span></div>
+    <div class="mod-bar" role="img" aria-label="0 of 4 episodes published"><span style="width:0%"></span></div>
+    <div class="eps">
+    <article class="ep soon">
+      <span class="num">12</span>
+      <div><h3>Embeddings explained</h3><p>Semantic similarity, cosine distance, visualizing vector space</p></div>
+      <div class="links"><span class="badge">Coming soon</span></div>
+    </article>
+    <article class="ep soon">
+      <span class="num">13</span>
+      <div><h3>Vector DBs compared</h3><p>FAISS, Chroma, pgvector, Pinecone, OpenSearch</p></div>
+      <div class="links"><span class="badge">Coming soon</span></div>
+    </article>
+    <article class="ep soon">
+      <span class="num">14</span>
+      <div><h3>Chunking strategies</h3><p>Fixed, recursive, semantic, document-aware</p></div>
+      <div class="links"><span class="badge">Coming soon</span></div>
+    </article>
+    <article class="ep soon">
+      <span class="num">15</span>
+      <div><h3>Hands-on: semantic search</h3><p>Build a semantic search engine over your own PDFs</p></div>
+      <div class="links"><span class="badge">Coming soon</span></div>
+    </article>
+    </div>
+  </section>
+  <section class="module upcoming" aria-label="Module 4: RAG: Retrieval-Augmented Generation">
+    <div class="mod-head"><span class="mod-num">Module 4</span><h3>RAG: Retrieval-Augmented Generation</h3><span class="mod-meta">Ep 16–21 · coming soon</span></div>
+    <div class="mod-bar" role="img" aria-label="0 of 6 episodes published"><span style="width:0%"></span></div>
+    <div class="eps">
+    <article class="ep soon">
+      <span class="num">16</span>
+      <div><h3>Why RAG</h3><p>Hallucinations, freshness, grounding, RAG vs fine-tuning</p></div>
+      <div class="links"><span class="badge">Coming soon</span></div>
+    </article>
+    <article class="ep soon">
+      <span class="num">17</span>
+      <div><h3>Naive RAG from scratch</h3><p>Build RAG without any framework</p></div>
+      <div class="links"><span class="badge">Coming soon</span></div>
+    </article>
+    <article class="ep soon">
+      <span class="num">18</span>
+      <div><h3>RAG with LangChain / LlamaIndex</h3><p>When frameworks help and when they hide too much</p></div>
+      <div class="links"><span class="badge">Coming soon</span></div>
+    </article>
+    <article class="ep soon">
+      <span class="num">19</span>
+      <div><h3>Advanced retrieval</h3><p>Hybrid search (BM25 + vectors), re-ranking, query rewriting, HyDE</p></div>
+      <div class="links"><span class="badge">Coming soon</span></div>
+    </article>
+    <article class="ep soon">
+      <span class="num">20</span>
+      <div><h3>Graph RAG vs Vector RAG</h3><p>Knowledge graphs with Neo4j / Amazon Neptune, and when relationships beat similarity</p></div>
+      <div class="links"><span class="badge">Coming soon</span></div>
+    </article>
+    <article class="ep soon">
+      <span class="num">21</span>
+      <div><h3>Evaluating RAG</h3><p>Faithfulness, context precision/recall, RAGAS, building a golden dataset</p></div>
+      <div class="links"><span class="badge">Coming soon</span></div>
+    </article>
+    </div>
+  </section>
+  <section class="module upcoming" aria-label="Module 5: Fine-tuning and Open Models">
+    <div class="mod-head"><span class="mod-num">Module 5</span><h3>Fine-tuning and Open Models</h3><span class="mod-meta">Ep 22–24 · coming soon</span></div>
+    <div class="mod-bar" role="img" aria-label="0 of 3 episodes published"><span style="width:0%"></span></div>
+    <div class="eps">
+    <article class="ep soon">
+      <span class="num">22</span>
+      <div><h3>When to fine-tune (and when you shouldn&#x27;t)</h3><p>Cost, data needs, alternatives</p></div>
+      <div class="links"><span class="badge">Coming soon</span></div>
+    </article>
+    <article class="ep soon">
+      <span class="num">23</span>
+      <div><h3>LoRA / QLoRA hands-on</h3><p>Fine-tune a small open model with Hugging Face</p></div>
+      <div class="links"><span class="badge">Coming soon</span></div>
+    </article>
+    <article class="ep soon">
+      <span class="num">24</span>
+      <div><h3>Running models locally</h3><p>Ollama, quantization, latency trade-offs</p></div>
+      <div class="links"><span class="badge">Coming soon</span></div>
+    </article>
+    </div>
+  </section>
+  <section class="module upcoming" aria-label="Module 6: Multimodal GenAI">
+    <div class="mod-head"><span class="mod-num">Module 6</span><h3>Multimodal GenAI</h3><span class="mod-meta">Ep 25–26 · coming soon</span></div>
+    <div class="mod-bar" role="img" aria-label="0 of 2 episodes published"><span style="width:0%"></span></div>
+    <div class="eps">
+    <article class="ep soon">
+      <span class="num">25</span>
+      <div><h3>Vision + language</h3><p>Image understanding, document/OCR extraction, chart reading</p></div>
+      <div class="links"><span class="badge">Coming soon</span></div>
+    </article>
+    <article class="ep soon">
+      <span class="num">26</span>
+      <div><h3>Speech pipelines</h3><p>Whisper transcription + LLM summarization</p></div>
+      <div class="links"><span class="badge">Coming soon</span></div>
+    </article>
+    </div>
+  </section>
+  <section class="module upcoming" aria-label="Module 7: Agentic AI Fundamentals">
+    <div class="mod-head"><span class="mod-num">Module 7</span><h3>Agentic AI Fundamentals</h3><span class="mod-meta">Ep 27–31 · coming soon</span></div>
+    <div class="mod-bar" role="img" aria-label="0 of 5 episodes published"><span style="width:0%"></span></div>
+    <div class="eps">
+    <article class="ep soon">
+      <span class="num">27</span>
+      <div><h3>What is an agent?</h3><p>The LLM + tools + loop + memory mental model</p></div>
+      <div class="links"><span class="badge">Coming soon</span></div>
+    </article>
+    <article class="ep soon">
+      <span class="num">28</span>
+      <div><h3>Tool / function calling</h3><p>Build tool calling from scratch</p></div>
+      <div class="links"><span class="badge">Coming soon</span></div>
+    </article>
+    <article class="ep soon">
+      <span class="num">29</span>
+      <div><h3>Agent patterns</h3><p>ReAct, plan-and-execute, reflection, routing</p></div>
+      <div class="links"><span class="badge">Coming soon</span></div>
+    </article>
+    <article class="ep soon">
+      <span class="num">30</span>
+      <div><h3>Agent memory</h3><p>Short-term, long-term, vector and graph memory</p></div>
+      <div class="links"><span class="badge">Coming soon</span></div>
+    </article>
+    <article class="ep soon">
+      <span class="num">31</span>
+      <div><h3>Build a research agent</h3><p>End to end</p></div>
+      <div class="links"><span class="badge">Coming soon</span></div>
+    </article>
+    </div>
+  </section>
+  <section class="module upcoming" aria-label="Module 8: MCP and Multi-Agent Systems">
+    <div class="mod-head"><span class="mod-num">Module 8</span><h3>MCP and Multi-Agent Systems</h3><span class="mod-meta">Ep 32–35 · coming soon</span></div>
+    <div class="mod-bar" role="img" aria-label="0 of 4 episodes published"><span style="width:0%"></span></div>
+    <div class="eps">
+    <article class="ep soon">
+      <span class="num">32</span>
+      <div><h3>Model Context Protocol explained</h3><p>Hosts, clients, servers, tools/resources/prompts</p></div>
+      <div class="links"><span class="badge">Coming soon</span></div>
+    </article>
+    <article class="ep soon">
+      <span class="num">33</span>
+      <div><h3>Build your own MCP server</h3><p>e.g., Jira or GitHub tools, connected to Claude</p></div>
+      <div class="links"><span class="badge">Coming soon</span></div>
+    </article>
+    <article class="ep soon">
+      <span class="num">34</span>
+      <div><h3>Multi-agent orchestration</h3><p>LangGraph, CrewAI, supervisor vs swarm patterns</p></div>
+      <div class="links"><span class="badge">Coming soon</span></div>
+    </article>
+    <article class="ep soon">
+      <span class="num">35</span>
+      <div><h3>Human-in-the-loop and guardrails</h3><p>Controls for agents taking real actions</p></div>
+      <div class="links"><span class="badge">Coming soon</span></div>
+    </article>
+    </div>
+  </section>
+  <section class="module upcoming" aria-label="Module 9: Evaluation and Observability">
+    <div class="mod-head"><span class="mod-num">Module 9</span><h3>Evaluation and Observability</h3><span class="mod-meta">Ep 36–38 · coming soon</span></div>
+    <div class="mod-bar" role="img" aria-label="0 of 3 episodes published"><span style="width:0%"></span></div>
+    <div class="eps">
+    <article class="ep soon">
+      <span class="num">36</span>
+      <div><h3>LLM evals 101</h3><p>Offline vs online, LLM-as-judge, rubric design</p></div>
+      <div class="links"><span class="badge">Coming soon</span></div>
+    </article>
+    <article class="ep soon">
+      <span class="num">37</span>
+      <div><h3>Agent evaluation</h3><p>Trajectory evals, tool-call accuracy, task success rates</p></div>
+      <div class="links"><span class="badge">Coming soon</span></div>
+    </article>
+    <article class="ep soon">
+      <span class="num">38</span>
+      <div><h3>Observability</h3><p>Tracing with LangSmith / Langfuse / OpenTelemetry, cost and latency dashboards</p></div>
+      <div class="links"><span class="badge">Coming soon</span></div>
+    </article>
+    </div>
+  </section>
+  <section class="module upcoming" aria-label="Module 10: Production and Deployment on AWS">
+    <div class="mod-head"><span class="mod-num">Module 10</span><h3>Production and Deployment on AWS</h3><span class="mod-meta">Ep 39–41 · coming soon</span></div>
+    <div class="mod-bar" role="img" aria-label="0 of 3 episodes published"><span style="width:0%"></span></div>
+    <div class="eps">
+    <article class="ep soon">
+      <span class="num">39</span>
+      <div><h3>Serving GenAI apps</h3><p>FastAPI, streaming responses, caching, rate limits</p></div>
+      <div class="links"><span class="badge">Coming soon</span></div>
+    </article>
+    <article class="ep soon">
+      <span class="num">40</span>
+      <div><h3>Deploy to AWS</h3><p>Bedrock for models, ECS Fargate vs App Runner for the app, secrets and IAM</p></div>
+      <div class="links"><span class="badge">Coming soon</span></div>
+    </article>
+    <article class="ep soon">
+      <span class="num">41</span>
+      <div><h3>Cost optimization and security</h3><p>Prompt caching, model routing, PII handling, responsible AI</p></div>
+      <div class="links"><span class="badge">Coming soon</span></div>
+    </article>
+    </div>
+  </section>
+  <section class="module upcoming" aria-label="Capstone: Ship an ask-your-docs agent on AWS">
+    <div class="mod-head"><span class="mod-num">Capstone</span><h3>Ship an ask-your-docs agent on AWS</h3><span class="mod-meta">Ep 42 · coming soon</span></div>
+    <div class="mod-bar" role="img" aria-label="0 of 1 episodes published"><span style="width:0%"></span></div>
+    <div class="eps">
+    <article class="ep soon">
+      <span class="num">42</span>
+      <div><h3>Build and ship</h3><p>An enterprise &quot;Ask-your-docs&quot; agent with RAG + MCP tools + evals, deployed on AWS, with a full architecture walkthrough</p></div>
+      <div class="links"><span class="badge">Coming soon</span></div>
+    </article>
+    </div>
+  </section>
+  <p style="margin-top:16px"><a href="https://github.com/Amitpnk/genai-zero-to-production#syllabus-42-episodes-10-modules--capstone" style="color:var(--mist)">See the full syllabus →</a></p>
 
   <h2>Guides</h2>
   <p style="margin:-6px 0 16px;color:var(--mist)">Cheat sheets for the tools and APIs used in the series. <a href="guides/" style="color:var(--orange)">Browse all 14 guides →</a></p>
@@ -143,22 +395,6 @@
       </div>
     </article>
   </div>
-
-  <h2>Roadmap: 10 modules + capstone</h2>
-  <div class="roadmap">
-    <div><b>01 · Ep 3–7</b>LLM Foundations</div>
-    <div><b>02 · Ep 8–11</b>Prompt Engineering</div>
-    <div><b>03 · Ep 12–15</b>Embeddings &amp; Vector DBs</div>
-    <div><b>04 · Ep 16–21</b>RAG &amp; Graph RAG</div>
-    <div><b>05 · Ep 22–24</b>Fine-tuning &amp; Open Models</div>
-    <div><b>06 · Ep 25–26</b>Multimodal GenAI</div>
-    <div><b>07 · Ep 27–31</b>Agentic AI Fundamentals</div>
-    <div><b>08 · Ep 32–35</b>MCP &amp; Multi-Agent</div>
-    <div><b>09 · Ep 36–38</b>Evals &amp; Observability</div>
-    <div><b>10 · Ep 39–41</b>Production on AWS</div>
-    <div><b>Capstone · Ep 42</b>Ship an ask-your-docs agent<br><span>RAG + MCP + evals on AWS</span></div>
-  </div>
-  <p style="margin-top:16px"><a href="https://github.com/Amitpnk/genai-zero-to-production#syllabus-42-episodes-10-modules--capstone" style="color:var(--mist)">See the full syllabus →</a></p>
 
   <footer>Amit · Generative AI &amp; Agentic AI Instructor</footer>
 </main>
