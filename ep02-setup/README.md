@@ -198,8 +198,6 @@ Bedrock has no single API key. You sign in with your AWS identity.
 **1. Credentials:** install the [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html), then create a profile named `genai-course`:
 
 ```bash
-aws configure sso --profile genai-course      # preferred: short-lived credentials
-# or, for a personal dev account:
 aws configure --profile genai-course          # access key + secret
 
 aws sts get-caller-identity --profile genai-course   # confirms who you are

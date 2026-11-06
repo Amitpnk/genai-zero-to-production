@@ -44,6 +44,7 @@ genai-zero-to-production/
 | 06 | The model landscape | [ep06-model-landscape](ep06-model-landscape/) |
 | 07 | Calling LLM APIs | [ep07-calling-llm-apis](ep07-calling-llm-apis/) |
 | 08 | Prompt anatomy | [ep08-prompt-anatomy](ep08-prompt-anatomy/) |
+| 09 | Zero-shot, few-shot and chain-of-thought | [ep09-prompting-techniques](ep09-prompting-techniques/) |
 
 ## Syllabus: 42 episodes, 10 modules + capstone
 

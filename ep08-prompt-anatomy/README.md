@@ -114,7 +114,7 @@ Valid format: 4/4   Right decision: 2/4
 
 **A perfect format can hide a wrong decision.** My first version of this demo only checked the format, and it said 4/4. Once it checked the *action*, it was 2/4.
 
-Why? The prompt's only example used `offer_replacement_or_refund`, so the model **copied it** everywhere. Examples are powerful, sometimes too powerful. **Episode 9** fixes this with varied few-shot examples.
+Why? The prompt's only example used `offer_replacement_or_refund`, so the model **copied it** everywhere. Examples are powerful, sometimes too powerful. **[Episode 9](../ep09-prompting-techniques/)** tests whether varied few-shot examples fix it, and the answer surprised us.
 
 ## 6. The iteration loop
 

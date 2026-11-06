@@ -40,6 +40,20 @@ def _ollama_messages(messages, system):
 
 
 # ---------- Gemini (google-genai) ----------
+_gemini = None
+
+
+def _gemini_client():
+    # Create the client once and keep it. A client made inline, like genai.Client().models...,
+    # can be closed by Python before its request is sent ("client has been closed").
+    global _gemini
+    if _gemini is None:
+        from google import genai
+
+        _gemini = genai.Client()
+    return _gemini
+
+
 def _gemini_contents(messages):
     from google.genai import types
 
@@ -67,9 +81,7 @@ def chat(messages, system=None, provider=None, max_tokens=2000, temperature=None
         choice = resp.choices[0]
         return Reply(choice.message.content, choice.finish_reason, resp.usage.prompt_tokens, resp.usage.completion_tokens)
     if provider == "gemini":
-        from google import genai
-
-        resp = genai.Client().models.generate_content(
+        resp = _gemini_client().models.generate_content(
             model=os.environ["GEMINI_MODEL"], contents=_gemini_contents(messages), config=_gemini_config(system, max_tokens, temperature)
         )
         usage = resp.usage_metadata
@@ -91,9 +103,7 @@ def stream(messages, system=None, provider=None, max_tokens=2000, temperature=No
                 yield chunk.choices[0].delta.content
         return
     if provider == "gemini":
-        from google import genai
-
-        for chunk in genai.Client().models.generate_content_stream(
+        for chunk in _gemini_client().models.generate_content_stream(
             model=os.environ["GEMINI_MODEL"], contents=_gemini_contents(messages), config=_gemini_config(system, max_tokens, temperature)
         ):
             if chunk.text:
